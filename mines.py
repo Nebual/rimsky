@@ -50,16 +50,16 @@ def draw_map( w, h, map = [], g = [], cx = -1, cy = -1, over = False):
 					char = " "
 				screen += char
 			else:
-				screen += "O"
+				screen += "-"
 		screen += "\n"
 	clear_console()
 	print screen
-		
+
 def add_guess( x, y, map, guesses, w, h, mines = 0 ):
 	if len( map ) > 0:
 		if x >= 0 and y >= 0 and x < w and y < h:
-			if map.count( ( x, y ) ) == 0:
-				if guesses.count( ( x, y ) ) > 0 or x < 0 or y < 0 or y > w or x > h:
+			if (x,y) not in map:
+				if (x,y) in guesses:
 					return True
 				guesses.append( ( x, y ) )
 				if count_beside( map, x, y ) == 0:
@@ -78,9 +78,24 @@ def add_guess( x, y, map, guesses, w, h, mines = 0 ):
 		return a
 		
 if __name__ == "__main__":
-	w = int_input("Width? ") or 20
-	h = int_input("Height? ") or 20
-	mines = int_input("How Many Mines? ") or 20
+	difficulty = int_input("Difficulty [1-3, 0 for custom]? ") or 0
+	if difficulty == 0:
+		w = int_input("Width? ") or 20
+		h = int_input("Height? ") or 20
+		mines = int_input("How Many Mines? ") or 20
+	elif difficulty == 1:
+		w = 9
+		h = 9
+		mines = 10
+	elif difficulty == 2:
+		w = 16
+		h = 16
+		mines = 40
+	elif difficulty == 3:
+		w = 30
+		h = 16
+		mines = 99
+	
 	x = w / 2
 	y = h / 2
 	guesses = []
@@ -92,7 +107,7 @@ if __name__ == "__main__":
 	while not game_over:
 		key = True
 		while not key == ENTER:
-			key = getKey( timeout=0.1 )
+			key = getKey( timeout=0.5 )
 			if not key:
 				#If getKey returned None, the timeout was reached. Blink the player.
 				cursor_visible = not cursor_visible
@@ -104,9 +119,9 @@ if __name__ == "__main__":
 				elif key == RIGHT: x += 1
 				elif key == LEFT: x -= 1
 				#make sure that the cursor is on the screen
-				if x >= w: x = w
+				if x >= w-1: x = w-1
 				elif x < 0: x = 0
-				if y >= h: y = h
+				if y >= h-1: y = h-1
 				elif y < 0: y = 0
 				#redraw the map
 				draw_map( w, h, map, guesses, x, y)
