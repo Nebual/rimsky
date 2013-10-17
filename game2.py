@@ -1,6 +1,7 @@
 import os, sys, math, collections
 from consolelib import *
 from mathlib import *
+import mines
 
 try: import Image
 except ImportError: 
@@ -54,6 +55,7 @@ class Player(Entity):
 EntityStatic("grass", chr(58))
 EntityStatic("tree", colourize(winchr(5), "GREEN"),        colour=(0,255,0))
 EntityStatic("chest", colourize(winchr(244), "YELLOW"),    colour=(255,148,43))
+EntityStatic("arcade", colourize(winchr(206), "YELLOW"))
 EntityStatic("wall", winchr(177),                          colour=(0,0,0), collision=True)
 
 #Load us some terrain
@@ -93,7 +95,7 @@ def drawScreen():
 #The Main Loop
 while True:
 	key = getKey(timeout=0.5)
-	os.system(os.name == "nt" and "cls" or "clear")
+	clear()
 	if not key:
 		#If getKey returned None, the timeout was reached. Blink the player.
 		Ply.visible = not Ply.visible
@@ -107,6 +109,7 @@ while True:
 		elif key == LEFT: Ply.move(Vector(-1,0))
 		
 		if key == " ":
+			#Logic based on what the player was standing on
 			ent = World[Ply.pos][-2]
 			if ent.name == "grass":
 				TextBox = "You find nothing of interest"
@@ -114,6 +117,17 @@ while True:
 				TextBox = "You pick up the tree.\nYou have nowhere to put it, so it disintegrates into thin air"
 				del World[Ply.pos][-2]
 			elif ent.name == "chest":
-				TextBox = "You find a treasure chest containing Win!\nCongradulations, there is now world peace!"
+				TextBox = ("You find a treasure chest containing an old arcade machine!\n"
+				"Since you don't have any pockets, you place it beside the chest.\n"
+				"It looks like an old Minesweeper clone.")
+				del World[Ply.pos][-2]
+				World[Ply.pos + (-1,0)].append(Entities["arcade"])
+			elif ent.name == "arcade":
+				print "You may leave the arcade by pressing ctrl-c"
+				try: mines.run_game()
+				except KeyboardInterrupt: pass
+				raw_input("Press any key to leave the arcade machine alone")
+				clear()
+				
 	
 	drawScreen()

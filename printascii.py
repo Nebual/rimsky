@@ -1,4 +1,5 @@
 if __name__ == "__main__":
+	from consolelib import winchr
 	print "SYMBOL"
 	print "WINDOWS's lame extended ASCII (CP850)"
 	print "UNICODE"
@@ -12,6 +13,6 @@ if __name__ == "__main__":
 			S += str(y*16+x)+" "*(5-len(str(y*16+x)))
 		S = S[:-1] + "\n"
 		for x in range(16):
-			S += str(ord(uchr(y*16+x)))+" "*(5-len(str(ord(uchr(y*16+x)))))
+			S += str(ord(winchr(y*16+x)))+" "*(5-len(str(ord(winchr(y*16+x)))))
 		S = S[:-1] + "\n\n"
 	print S

@@ -77,25 +77,26 @@ def add_guess( x, y, map, guesses, w, h, mines = 0 ):
 		add_guess( x, y, a, guesses, w, h)
 		return a
 		
-if __name__ == "__main__":
-	difficulty = int_input("Difficulty [1-3, 0 for custom]? ") or 0
-	if difficulty == 0:
-		w = int_input("Width? ") or 20
-		h = int_input("Height? ") or 20
-		mines = int_input("How Many Mines? ") or 20
-	elif difficulty == 1:
-		w = 9
-		h = 9
-		mines = 10
-	elif difficulty == 2:
-		w = 16
-		h = 16
-		mines = 40
-	elif difficulty == 3:
-		w = 30
-		h = 16
-		mines = 99
-	
+def run_game(w=None, h=20, mines=20):
+	if not w:
+		#We weren't passed a width argument, let them pick a difficulty
+		difficulty = int_input("Difficulty [1-3, 0 for custom]? ") or 0
+		if difficulty == 0:
+			w = int_input("Width? ") or 20
+			h = int_input("Height? ") or 20
+			mines = int_input("How Many Mines? ") or 20
+		elif difficulty == 1:
+			w = 9
+			h = 9
+			mines = 10
+		elif difficulty == 2:
+			w = 16
+			h = 16
+			mines = 40
+		elif difficulty == 3:
+			w = 30
+			h = 16
+			mines = 99
 	x = w / 2
 	y = h / 2
 	guesses = []
@@ -140,3 +141,6 @@ if __name__ == "__main__":
 				game_over = True
 				draw_map( w, h, map, guesses, -1, -1, True )
 				print "You Win!"
+
+if __name__ == "__main__":
+	run_game()

@@ -1,5 +1,5 @@
-__all__ = ["colorama", "colourize", "winchr", "UP", "DOWN", "RIGHT", "LEFT", "getKey"]
-import sys
+__all__ = ["colorama", "colourize", "winchr", "clear", "UP", "DOWN", "RIGHT", "LEFT", "getKey"]
+import sys, os
 try: 
 	import colorama; colorama.init() #Allows console colours on Windows
 except ImportError: pass
@@ -20,8 +20,13 @@ DOWN = "\xe0P"
 RIGHT = "\xe0M"
 LEFT = "\xe0K"
 
+def clear():
+	os.system(os.name == "nt" and "cls" or "clear")
+
 try:
 	import msvcrt, time
+	#Okay the import succeeded, we're Windows
+	
 	def getKey(timeout=0):
 		endtime = timeout + time.time()
 		while time.time() < endtime:
