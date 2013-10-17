@@ -15,10 +15,14 @@ def winchr(num):
 		elif num == 5: return unichr(9827)
 	return unicode(chr(num), "CP850")
 
-UP = "\xe0H"
-DOWN = "\xe0P"
-RIGHT = "\xe0M"
-LEFT = "\xe0K"
+UP_ARROW = "\xe0H"
+DOWN_ARROW = "\xe0P"
+RIGHT_ARROW = "\xe0M"
+LEFT_ARROW = "\xe0K"
+UP = "w"
+DOWN = "s"
+RIGHT = "d"
+LEFT = "a"
 
 def clear():
 	os.system(os.name == "nt" and "cls" or "clear")

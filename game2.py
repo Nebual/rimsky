@@ -108,7 +108,7 @@ while True:
 		elif key == RIGHT: Ply.move(Vector(1,0))
 		elif key == LEFT: Ply.move(Vector(-1,0))
 		
-		if key == " ":
+		if key == "e":
 			#Logic based on what the player was standing on
 			ent = World[Ply.pos][-2]
 			if ent.name == "grass":

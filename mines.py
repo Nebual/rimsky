@@ -2,9 +2,8 @@ from random import randint
 import os
 from consolelib import *
 
-ENTER = "\r"
-def clear_console():
-	os.system(['clear','cls'][os.name == 'nt'])
+ENTER = "e"
+FLAG  = "f"
 
 def int_input( string ):
 	try:
@@ -36,7 +35,7 @@ def count_beside( map, x, y ):
 			num += 1
 	return num
 
-def draw_map( w, h, map = [], g = [], cx = -1, cy = -1, over = False):
+def draw_map( w, h, map = [], guesses = [], flags = [], cx = -1, cy = -1, over = False):
 	screen	= ""
 	for y in range( 0, h ):
 		for x in range( 0, w ):
@@ -44,15 +43,19 @@ def draw_map( w, h, map = [], g = [], cx = -1, cy = -1, over = False):
 				screen += "X"
 			elif x == cx and y == cy:
 				screen += "#"
-			elif g.count( ( x, y ) ) > 0:
+			elif (x,y) in guesses:
 				char = str( count_beside( map, x, y) )
 				if char == "0":
 					char = " "
 				screen += char
+			elif (x,y) in flags:
+				screen += "!"
 			else:
 				screen += "-"
 		screen += "\n"
-	clear_console()
+	clear()
+	screen += "\nFlags (f): " + str(len(flags)) + "\n"
+	screen += "Left (e): " + str(w*h - (len(guesses) + len(flags)))
 	print screen
 
 def add_guess( x, y, map, guesses, w, h, mines = 0 ):
@@ -100,6 +103,7 @@ def run_game(w=None, h=20, mines=20):
 	x = w / 2
 	y = h / 2
 	guesses = []
+	flags = []
 	map = []
 	draw_map( w, h )
 	game_over = False
@@ -112,7 +116,10 @@ def run_game(w=None, h=20, mines=20):
 			if not key:
 				#If getKey returned None, the timeout was reached. Blink the player.
 				cursor_visible = not cursor_visible
-				draw_map( w, h, map, guesses, x * ( 1 if cursor_visible else -1 ) , y )
+			elif key == FLAG:
+				cursor_visible = False
+				if (x,y) not in guesses: 
+					flags.append((x,y))
 			else:
 				#Allow the arrow keys to move the player around
 				if key == UP: y -= 1
@@ -124,22 +131,25 @@ def run_game(w=None, h=20, mines=20):
 				elif x < 0: x = 0
 				if y >= h-1: y = h-1
 				elif y < 0: y = 0
-				#redraw the map
-				draw_map( w, h, map, guesses, x, y)
+				cursor_visible = True
+			#redraw the map
+			draw_map( w, h, map, guesses, flags, x * ( 1 if cursor_visible else -1 ), y )
 		g = add_guess( x, y, map, guesses, w, h, mines )
 		if not type( g ) == bool:
 			map = g
 			g = True
 		if not g:
 			game_over = True
-			draw_map( w, h, map, guesses, -1, -1, True )
+			draw_map( w, h, map, guesses, flags, over=True )
 			print "Game Over!"
 		else:
+			if (x,y) in flags:
+				flags.remove((x,y))
 			if len( guesses ) < w * h - mines:
-				draw_map( w, h, map, guesses )
+				draw_map( w, h, map, guesses, flags )
 			else:
 				game_over = True
-				draw_map( w, h, map, guesses, -1, -1, True )
+				draw_map( w, h, map, guesses, flags, over=True )
 				print "You Win!"
 
 if __name__ == "__main__":
