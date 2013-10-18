@@ -1,9 +1,11 @@
 from random import randint
-import os
+import os, time
 from consolelib import *
 
 ENTER = "e"
 FLAG  = "f"
+
+StartTime = 0
 
 def int_input( string ):
 	try:
@@ -24,6 +26,10 @@ def gen_map( x, y, mines, w, h ):
 		map.append( ops.pop( randint( 0, l-1 ) ) )
 		l -= 1
 		mines -= 1
+	
+	global StartTime
+	StartTime = time.time()
+	
 	return map
 
 def count_beside( map, x, y ):
@@ -54,8 +60,9 @@ def draw_map( w, h, map = [], guesses = [], flags = [], cx = -1, cy = -1, over =
 				screen += "-"
 		screen += "\n"
 	clear()
-	screen += "\nFlags (f): " + str(len(flags)) + "\n"
-	screen += "Left (e): " + str(w*h - (len(guesses) + len(flags)))
+	screen += "\nFlags (f): " + str(len(flags))
+	screen += "\nLeft (e): " + str(w*h - (len(guesses) + len(flags)))
+	if StartTime: screen += "\nTime elapsed: " + str(round(time.time() - StartTime,1))
 	print screen
 
 def add_guess( x, y, map, guesses, w, h, mines = 0 ):
