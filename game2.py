@@ -1,6 +1,9 @@
-import os, sys, math, collections
+import os, sys, math, collections, copy
+
 from consolelib import *
 from mathlib import *
+import inventory
+from g import G
 import mines
 
 try: import Image
@@ -12,7 +15,7 @@ except ImportError:
 #This is a lookup table for the level loader, mapping colours to entities
 EntityFromColour = {}
 #This is a dict of static instances of Entities
-Entities = {}
+G.Entities = {}
 
 class Entity:
 	""" This is a generic entity, all worldmap entities should derive from this """
@@ -27,7 +30,7 @@ class Entity:
 		EntityFromColour[colour] = self
 def EntityStatic(*args, **kwargs):
 	ent = Entity(*args, **kwargs)
-	Entities[ent.name] = ent
+	G.Entities[ent.name] = ent
 	return ent
 
 class Player(Entity):
@@ -56,13 +59,13 @@ EntityStatic("grass", chr(58))
 EntityStatic("tree", colourize(winchr(5), "GREEN"),        colour=(0,255,0))
 EntityStatic("chest", colourize(winchr(244), "YELLOW"),    colour=(255,148,43))
 EntityStatic("arcade", colourize(winchr(206), "YELLOW"))
-EntityStatic("wall", winchr(177),                          colour=(0,0,0), collision=True)
+EntityStatic("wall", winchr(219),                          colour=(0,0,0), collision=True)
 
 #Load us some terrain
 class WorldClass(dict):
 	def __missing__(self, key):
 		#Defaults to a list containing grass
-		self[key] = [Entities["grass"]]
+		self[key] = [G.Entities["grass"]]
 		return self[key]
 	def load(self, name):
 		level1Image = Image.open(name)
@@ -75,10 +78,11 @@ class WorldClass(dict):
 					self[x,y].append(EntityFromColour[level1[x,y]])
 		return self
 #Player initial position (should be based on level loaded)
-CameraPos = Vector(0,0)
-Ply = Player("player", winchr(1))
-World = WorldClass().load("level1.png")
-Ply.move(Vector(1,1))
+G.CameraPos = CameraPos = Vector(0,0)
+G.Ply = Ply = Player("player", winchr(1))
+G.World = World = WorldClass().load("level1.png")
+G.Inventory = []
+G.Ply.move(Vector(1,1))
 
 
 
@@ -114,20 +118,25 @@ while True:
 			if ent.name == "grass":
 				TextBox = "You find nothing of interest"
 			elif ent.name == "tree":
-				TextBox = "You pick up the tree.\nYou have nowhere to put it, so it disintegrates into thin air"
+				TextBox = "You pick up the tree, and toss it in your knapsack."
 				del World[Ply.pos][-2]
+				G.Inventory.append(copy.copy(ent))
 			elif ent.name == "chest":
 				TextBox = ("You find a treasure chest containing an old arcade machine!\n"
 				"Since you don't have any pockets, you place it beside the chest.\n"
 				"It looks like an old Minesweeper clone.")
 				del World[Ply.pos][-2]
-				World[Ply.pos + (-1,0)].append(Entities["arcade"])
+				World[Ply.pos + (-1,0)].append(G.Entities["arcade"])
 			elif ent.name == "arcade":
 				print "You may leave the arcade by pressing ctrl-c"
 				try: mines.run_game()
 				except KeyboardInterrupt: pass
 				raw_input("Press any key to leave the arcade machine alone")
 				clear()
+		elif key == "i":
+			try: inventory.main(G)
+			except KeyboardInterrupt: pass
+			clear()
 				
 	
 	drawScreen()
