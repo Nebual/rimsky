@@ -1,11 +1,14 @@
 __all__ = ["colorama", "colourize", "winchr", "clear", "UP", "DOWN", "RIGHT", "LEFT", "getKey"]
-import sys, os
+import sys, os, contextlib
+from cStringIO import StringIO
 try: 
 	import colorama; colorama.init() #Allows console colours on Windows
 except ImportError: pass
 else:
 	def colourize(text, colour="GREEN"):
 		return colorama.Fore.__dict__[colour] + text + colorama.Fore.RESET
+	def background(text, colour="GREEN"):
+		return colorama.Back.__dict__[colour] + text + colorama.Back.RESET
 def winchr(num):
 	""" Takes a CP850 character int, and returns the unicode string
 		Windows's Terminal's extended ASCII is quite nonstandard...
@@ -30,18 +33,25 @@ def clear():
 try:
 	import msvcrt, time
 	#Okay the import succeeded, we're Windows
+	def getch():
+		ch = msvcrt.getch()
+		if ord(ch) == 224:
+			ch += msvcrt.getch()
+		elif ord(ch) == 3:
+			raise KeyboardInterrupt
+		return ch
 	
 	def getKey(timeout=0):
-		endtime = timeout + time.time()
-		while time.time() < endtime:
-			if msvcrt.kbhit():
-				ch = msvcrt.getch()
-				if ord(ch) == 224:
-					ch += msvcrt.getch()
-				return ch
-			else:
-				time.sleep(0.01)
-		return None
+		if timeout:
+			endtime = timeout + time.time()
+			while time.time() < endtime:
+				if msvcrt.kbhit():
+					return getch()
+				else:
+					time.sleep(0.01)
+			return None
+		else:
+			return getch()
 except ImportError: #Linux
 	import sys, tty, termios, select
 	
@@ -73,6 +83,66 @@ except ImportError: #Linux
 		finally:
 			termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
 		return ch
+
+def ljust_noansi(s, width):
+	"""Like str.ljust, but ignores the additional characters of ANSI colours"""
+	length = len(s) - s.count("\033")*5
+	return s + " "*(width - length)
+def screenSplit(strings, width=0):
+	"""Takes a tuple of strings (each may contain \n's) and a maximum width (for each column)
+	returns a string formatted like a table
+	eg. screenSplit(("Hey\nThere\nSir", "My\ntest\nstring", "Third\ncolumn"))
+	Hey							My					Third
+	There						test				Column
+	Sir							string"""
+	tabs = [s.split("\n") for s in strings]
+	numrows = len(max(tabs, key=len))
+	if not width: width = 79 // len(strings)
+	ret = [""] * numrows
+	for i in range(numrows):
+		ret[i] = "".join([ljust_noansi(len(t) > i and t[i] or "", width) for t in tabs])
+	return "\n".join(ret)
+
+
+class mystdout(object):
+	def __init__(self, suppress=False):
+		self.file = StringIO()
+		self.stdout = sys.stdout
+		sys.stdout = self
+		self.suppress = suppress
+	def write(self, data):
+		self.file.write(data)
+		if not self.suppress: self.stdout.write(data)
+	def close(self):
+		s = self.file.getvalue()
+		sys.stdout = self.stdout
+		self.file.close()
+		return s
+
+@contextlib.contextmanager
+def listenPrints(suppress=False):
+	"""Creates a context that saves all prints to a string, while optionally suppressing them.
+	returns a list containing the string at index 0.
+	with listenPrints() as out: print("lol")
+	"""
+	out = [""]
+	myout = mystdout(suppress=suppress)
+	try:
+		yield out
+	finally:
+		out[0] = myout.close()
+@contextlib.contextmanager
+def charByChar(speed=0.05):
+	"""Creates a context that saves all prints to a string, suppressing them.
+	When context is left, it prints the string char by char.
+	with charByChar(speed=0.1): print("lol")
+	"""
+	with listenPrints(suppress=True) as out:
+		yield out
+	for char in out[0]:
+		sys.stdout.write(char)
+		sys.stdout.flush()
+		time.sleep(speed)
 
 if __name__ == "__main__":
 	while True:
