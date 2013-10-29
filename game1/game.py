@@ -1,21 +1,22 @@
 import pyglet
 import physicalobject
+import resources
 
-game_window = pyglet.window.Window(800, 600)
-main_batch = pyglet.graphics.Batch()
+gameWindow = pyglet.window.Window(800, 600)
+mainBatch = pyglet.graphics.Batch()
 
-text1 = pyglet.text.Label(text="some text", x=400, y=300, anchor_x="center", batch=main_batch)
-player_ship = physicalobject.Player(x=400, y=200, batch=main_batch)
-game_window.push_handlers(player_ship.key_handler)
+text1 = pyglet.text.Label(text="some text", x=400, y=300, anchor_x="center", batch=mainBatch)
+playerShip = physicalobject.Player(x=400, y=200, batch=mainBatch)
+gameWindow.push_handlers(playerShip.keyHandler)
 
 
 def update(dt):
-	player_ship.update(dt)
+	playerShip.update(dt)
 	
-@game_window.event
+@gameWindow.event
 def on_draw():
-	game_window.clear()
-	main_batch.draw()
+	gameWindow.clear()
+	mainBatch.draw()
 	
 if __name__ == '__main__':
 	pyglet.clock.schedule_interval(update, 1/120.0)
