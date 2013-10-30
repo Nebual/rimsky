@@ -9,11 +9,12 @@ class PhysicalObject(pyglet.sprite.Sprite):
 		super(PhysicalObject, self).__init__(*args, **kwargs)
 		
 		self.velX, self.velY = 0.0, 0.0
+		self.window = pyglet.window.get_platform().get_default_display().get_windows()[0]
 		
 	def update(self, dt):					#updates position, accounting for time elapsed (dt)
 		self.x += self.velX * dt
 		self.y += self.velY * dt
-		self.checkBounds()
+		#self.checkBounds()
 		self.maxSpeed = 600
 		
 	def checkBounds(self):					#makes screen wrap. replace eventually.
@@ -53,7 +54,19 @@ class Player(PhysicalObject):
 		if self.keyHandler[key.X]:					#brake
 			self.velX -= (self.velX > 0 and 1 or -1) * min(self.thrust * 0.75 * dt, abs(self.velX))
 			self.velY -= (self.velY > 0 and 1 or -1) * min(self.thrust * 0.75 * dt, abs(self.velY))
-			
+		
+		self.updateCamera(dt)
+		
+	def updateCamera(self, dt)
+		"""Shift the camera to always follow the Player."""
+		if (self.x - self.window.camera.x) > (self.window.width / 1.5):
+			self.window.camera.x += ((self.x - self.window.camera.x) - (self.window.width / 1.5)) * 3 * dt
+		elif (self.x - self.window.camera.x) < (self.window.width / 3):
+			self.window.camera.x += ((self.x - self.window.camera.x) - (self.window.width / 3)) * 3 * dt
+		if (self.y - self.window.camera.y) > (self.window.height / 1.5):
+			self.window.camera.y += ((self.y - self.window.camera.y) - (self.window.height / 1.5)) * 3 * dt
+		elif (self.y - self.window.camera.y) < (self.window.height / 3):
+			self.window.camera.y += ((self.y - self.window.camera.y) - (self.window.height / 3)) * 3 * dt
 			
 	def increaseThrust(self, dt, mul):				#increase speed up to max speed
 		angleRadianss = -math.radians(self.rotation)
