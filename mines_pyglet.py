@@ -1,5 +1,5 @@
 from random import randint
-import os, time
+import os, sys, time
 from consolelib import *
 import pyglet
 from pyglet.window import key
@@ -47,7 +47,7 @@ def count_beside( map, x, y ):
 
 
 label = pyglet.text.Label('Hello, world',
-                          font_name='Monospace',
+                          font_name=(sys.platform=='linux2' and 'Monospace' or 'Courier New'),
                           font_size=12,
                           multiline=True, width=window.width,
                           x=0, y=window.height,

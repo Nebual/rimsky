@@ -37,6 +37,9 @@ class Vector:
 		self.x *= val
 		self.y *= val
 		return self
+		
+	def __mod__(self, val):
+		return Vector(self.x % val[0], self.y % val[1])
 				
 	def __getitem__(self, key):
 		if key == 0:
@@ -61,3 +64,6 @@ class Vector:
 		return hash((self.x, self.y))
 	def __eq__(self, other):
 		return self.x == other[0] and self.y == other[1]
+
+	def distance(self, point2 = (0,0)):
+		return math.sqrt((self[0] - point2[0]) ** 2 + (self[1] - point2[1]) ** 2)
