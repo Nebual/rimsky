@@ -3,19 +3,23 @@ from pyglet.window import key
 import resources
 import math
 
+from mathlib import Vector
+
 class PhysicalObject(pyglet.sprite.Sprite):
 	
 	def __init__(self, *args, **kwargs):
 		super(PhysicalObject, self).__init__(*args, **kwargs)
 		
-		self.velX, self.velY = 0.0, 0.0
+		self.maxSpeed = 600
+		self.vel = Vector(0.0, 0.0)
 		self.window = pyglet.window.get_platform().get_default_display().get_windows()[0]
 		
 	def update(self, dt):					#updates position, accounting for time elapsed (dt)
-		self.x += self.velX * dt
-		self.y += self.velY * dt
+		for planet in self.window.planets:
+			self.gravitate(dt, planet)
+		self.x += self.vel.x * dt
+		self.y += self.vel.y * dt
 		#self.checkBounds()
-		self.maxSpeed = 600
 		
 	def checkBounds(self):					#makes screen wrap. replace eventually.
 		minX = -self.image.width/2
@@ -30,6 +34,25 @@ class PhysicalObject(pyglet.sprite.Sprite):
 			self.y = maxY
 		elif self.y > maxY:
 			self.y = minY		
+	
+	
+	"""
+	Assume planet.pos = (500,500)
+	Assume player.pos = (510,700)
+	
+	self = playerShip
+	self.vel += Vector(-10, -200).normalized()
+	self.vel += Vector(-0.01, -0.99) * planet.gravity / (212**2)
+	"""
+	
+	def gravitate(self, dt, planet):
+		
+		if planet.gravity != 0:
+			distance = Vector(planet.x,planet.y).distance((self.x,self.y))
+			if distance < 300 and distance > planet.radius:
+				speedChange = ((1000000 * planet.gravity) / distance**2) * dt
+				if self.thrust: speedChange = min(self.thrust * 0.8 * dt, speedChange)
+				self.vel += Vector(planet.x - self.x, planet.y - self.y).normalized() * speedChange
 		
 class Player(PhysicalObject):
 	
@@ -52,8 +75,8 @@ class Player(PhysicalObject):
 		if self.keyHandler[key.DOWN]:
 			self.increaseThrust(dt, -1)
 		if self.keyHandler[key.X]:					#brake
-			self.velX -= (self.velX > 0 and 1 or -1) * min(self.thrust * 0.75 * dt, abs(self.velX))
-			self.velY -= (self.velY > 0 and 1 or -1) * min(self.thrust * 0.75 * dt, abs(self.velY))
+			self.vel.x -= (self.vel.x > 0 and 1 or -1) * min(self.thrust * 0.75 * dt, abs(self.vel.x))
+			self.vel.y -= (self.vel.y > 0 and 1 or -1) * min(self.thrust * 0.75 * dt, abs(self.vel.y))
 		
 		self.updateCamera(dt)
 		
@@ -69,10 +92,20 @@ class Player(PhysicalObject):
 			self.window.camera.y += ((self.y - self.window.camera.y) - (self.window.height / 3)) * 3 * dt
 			
 	def increaseThrust(self, dt, mul):				#increase speed up to max speed
-		angleRadianss = -math.radians(self.rotation)
-		self.velX += math.cos(angleRadianss) * self.thrust * dt * mul
-		self.velY += math.sin(angleRadianss) * self.thrust * dt * mul
-		s = (self.velX**2 + self.velY**2) ** 0.5
+		angleRadians = -math.radians(self.rotation)
+		self.vel += Vector(math.cos(angleRadians), math.sin(angleRadians)) * (self.thrust * dt * mul)
+		s = self.vel.length()
 		if s > self.maxSpeed:
-			self.velX *= self.maxSpeed / s
-			self.velY *= self.maxSpeed / s
+			self.vel *= self.maxSpeed / s
+
+class Planet(PhysicalObject):
+	def __init__(self, gravity=1.0, *args, **kwargs):
+		planetImage = resources.loadImage("planet.png", center=True)        #planet texture
+		super(Planet, self).__init__(img=planetImage, *args, **kwargs)
+		self.gravity = gravity
+		self.radius = (planetImage.width + planetImage.height) / 4
+		print self.radius
+		self.window.planets.append(self)
+
+	def update(self, dt):                                                        
+		super(Planet, self).update(dt)

@@ -21,22 +21,27 @@ class Background(object):
 			
 			corePos = Vector(rnd.random()*800*1.5, rnd.random()*600*1.5)
 			spr = pyglet.sprite.Sprite(im, x=corePos.x, y=corePos.y, batch=self.batch)
-			spr.speed = rnd.random() ** 2.8
-			spr.scale = (spr.speed / 2)
+			
+			size = rnd.random() ** 2.8
+			spr.scale = size / 2
+			spr.speed = size / 8
 			self.stars.append(spr)
 
 	def update(self, dt):
-		gameWindow, playerShip = self.window, self.window.playerShip
+		w, h = self.window.width, self.window.height
+		camX, camY = self.window.camera.x, self.window.camera.y
+		velX, velY = self.window.playerShip.vel.x * dt, self.window.playerShip.vel.y * dt
+		
 		for spr in self.stars:
-			spr.x -= playerShip.velX * spr.speed * dt
-			if (spr.x + 400) < gameWindow.camera.x: #going to the right
-				spr.x += 1200# * (1+rnd.random())
-			if (spr.x - 1200) > gameWindow.camera.x:
-				spr.x -= 1200# * (1+rnd.random())
-			spr.y -= playerShip.velY * spr.speed * dt
-			if (spr.y + 300) < gameWindow.camera.y:
-				spr.y += 900# * (1+rnd.random())
-			if (spr.y - 900) > gameWindow.camera.y:
-				spr.y -= 900# * (1+rnd.random())
+			spr.x -= velX * spr.speed
+			if (spr.x + w*0.5) < camX: #going to the right
+				spr.x += w*1.5
+			if (spr.x - w*1.5) > camX:
+				spr.x -= w*1.5
+			spr.y -= velY * spr.speed
+			if (spr.y + h*0.5) < camY:
+				spr.y += h*1.5
+			if (spr.y - h*1.5) > camY:
+				spr.y -= h*1.5
 	def draw(self):
 		self.batch.draw()
