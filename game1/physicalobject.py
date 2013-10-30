@@ -46,12 +46,12 @@ class PhysicalObject(pyglet.sprite.Sprite):
 	"""
 	
 	def gravitate(self, dt, planet):
-		
 		if planet.gravity != 0:
 			distance = Vector(planet.x,planet.y).distance((self.x,self.y))
-			if distance < 300 and distance > planet.radius:
-				speedChange = ((1000000 * planet.gravity) / distance**2) * dt
-				if self.thrust: speedChange = min(self.thrust * 0.8 * dt, speedChange)
+			distance2 = distance - planet.radius
+			if distance > planet.radius and distance2 < 300:
+				speedChange = ((1000000 * planet.gravity) / distance2**2) * dt
+				if self.thrust: speedChange = min(self.thrust * 0.75 * dt, speedChange)
 				self.vel += Vector(planet.x - self.x, planet.y - self.y).normalized() * speedChange
 		
 class Player(PhysicalObject):
