@@ -1,3 +1,5 @@
+import math
+
 class Vector:
 	""" Represents a 2D vector
 		Hashes like a len2 tuple
@@ -66,4 +68,15 @@ class Vector:
 		return self.x == other[0] and self.y == other[1]
 
 	def distance(self, point2 = (0,0)):
-		return math.sqrt((self[0] - point2[0]) ** 2 + (self[1] - point2[1]) ** 2)
+		return math.sqrt((self.x - point2[0]) ** 2 + (self.y - point2[1]) ** 2)
+	def length(self):
+		return math.sqrt(self.x**2 + self.y**2)
+	def normalize(self):
+		"""Normalize in place"""
+		length = self.length()
+		self.x /= length
+		self.y /= length
+	def normalized(self):
+		"""Returns a normalized copy of this"""
+		length = self.length()
+		return Vector(self.x / length, self.y / length)
