@@ -57,7 +57,7 @@ class Player(PhysicalObject):
 		
 		self.updateCamera(dt)
 		
-	def updateCamera(self, dt)
+	def updateCamera(self, dt):
 		"""Shift the camera to always follow the Player."""
 		if (self.x - self.window.camera.x) > (self.window.width / 1.5):
 			self.window.camera.x += ((self.x - self.window.camera.x) - (self.window.width / 1.5)) * 3 * dt
