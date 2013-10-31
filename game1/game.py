@@ -2,7 +2,7 @@ import os, sys
 sys.path.append("..")
 import pyglet
 
-import physicalobject, resources
+import physicalobject, resources, solarsystem
 from background import Background
 from mathlib import Vector
 
@@ -21,8 +21,8 @@ gameWindow.push_handlers(playerShip.keyHandler)
 
 gameWindow.camera = Vector(0,0)
 gameWindow.planets = [] #Will need to be moved to like, solarsystem.planets later
-
-physicalobject.Planet(x=1200, y=300, batch=planetBatch)
+newSystem = solarsystem.SolarSystem(x=-1000, y=2)
+physicalobject.Planet(x=1200, y=300, img=resources.loadImage("planet.png"), batch=planetBatch)
 
 
 def update(dt):
@@ -37,7 +37,8 @@ def on_draw():
 	pyglet.gl.glTranslatef(-gameWindow.camera[0], -gameWindow.camera[1], 0.5) #Set camera position
 
 	background.draw()
-	planetBatch.draw()	
+	planetBatch.draw()
+	newSystem.draw()	
 	mainBatch.draw()
 	playerShip.draw()
 	

@@ -14,7 +14,7 @@ class PhysicalObject(pyglet.sprite.Sprite):
 		self.vel = Vector(0.0, 0.0)
 		self.window = pyglet.window.get_platform().get_default_display().get_windows()[0]
 		self.gravity = 0
-		self.pos = Vector(self.x, self.y)
+		
 		
 	def update(self, dt):					#updates position, accounting for time elapsed (dt)
 		for planet in self.window.planets:
@@ -53,7 +53,7 @@ class PhysicalObject(pyglet.sprite.Sprite):
 			distance2 = distance - planet.radius
 			if distance2 < 300:
 				if distance > planet.radius: 
-					speedChange = ((planet.gravity) / distance2**2) * dt
+					speedChange = ((planet.gravity) / distance2**2.5) * dt
 				#else:
 				#	speedChange = -((1000000 * planet.gravity) / 200**2) * dt
 					if self.thrust: speedChange = min(self.thrust * 0.75 * dt, speedChange)
@@ -116,12 +116,10 @@ class Player(PhysicalObject):
 			self.vel *= self.maxSpeed / s
 
 class Planet(PhysicalObject):
-	def __init__(self, *args, **kwargs):
-		planetImage = resources.loadImage("planet.png", center=True)     #planet texture
-		super(Planet, self).__init__(img=planetImage, *args, **kwargs)
-		self.gravity = planetImage.width*planetImage.height*500			 #Gravity scales with size of image
-		self.radius = (planetImage.width + planetImage.height) / 4
-		print self.radius
+	def __init__(self, *args, **kwargs): 
+		super(Planet, self).__init__(*args, **kwargs)
+		self.gravity = self.image.width*self.image.height*100			#Gravity scales with size of image
+		self.radius = (self.image.width + self.image.height) / 4
 		self.window.planets.append(self)
 
 	def update(self, dt):                                                        
