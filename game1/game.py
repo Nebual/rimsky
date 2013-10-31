@@ -22,7 +22,7 @@ gameWindow.push_handlers(playerShip.keyHandler)
 gameWindow.camera = Vector(0,0)
 gameWindow.planets = [] #Will need to be moved to like, solarsystem.planets later
 
-physicalobject.Planet(x=1200, y=300, batch=planetBatch, gravity=5.0)
+physicalobject.Planet(x=1200, y=300, batch=planetBatch)
 
 
 def update(dt):

@@ -7,9 +7,9 @@ from mathlib import Vector
 class Background(object):
 	def __init__(self, stars=80):
 		self.stars = []
-		self.batch = pyglet.graphics.Batch()
-		self.setNumStars(stars)
+		self.batch = pyglet.graphics.Batch() #So batches are a bit like... a compiled list of a bunch of things with .draw functions. I made my own stars list, because I don't know what the inside of a Batch looks like, may be able to just use it.
 		self.window = pyglet.window.get_platform().get_default_display().get_windows()[0] #For globals
+		self.setNumStars(stars)
 		self.oldCamVel = Vector(0,0)
 
 	def setNumStars(self, num=80, mode=0):
@@ -22,7 +22,7 @@ class Background(object):
 			for i in range(num):
 				rnd.seed(5 + i*10293)
 				
-				corePos = Vector(rnd.random()*800*1.5, rnd.random()*600*1.5)
+				corePos = Vector(rnd.random()*self.window.width*1.5, rnd.random()*self.window.height*1.5)
 				spr = pyglet.sprite.Sprite(im, x=corePos.x, y=corePos.y, batch=self.batch)
 				
 				size = rnd.random() ** 2.8

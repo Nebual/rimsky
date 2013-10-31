@@ -13,4 +13,17 @@ def loadImage(filename, center=False):
 		centerImage(image)
 	return image
 	
+def tileImage(image, width, height):
+	tileList = range(width)
+	for i in tileList:
+		i = range(height)
+		for j in i:
+			j = pyglet.sprite.Sprite(image)
+	return tileList
+
+testImage = loadImage("playership.png")
+	
+if __name__ == "__main__":
+	print tileImage(testImage, 4, 4)
+	
 
