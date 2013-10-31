@@ -49,7 +49,7 @@ class Vector:
 		elif key == 1:
 			return self.y
 		else:
-			raise Exception("Invalid key to Vector")
+			raise IndexError("Invalid key ("+str(key)+") to Vector")
 		
 	def __setitem__(self, key, value):
 		if key == 0:
@@ -57,7 +57,7 @@ class Vector:
 		elif key == 1:
 			self.y = value
 		else:
-			raise Exception("Invalid key to Vector")
+			raise IndexError("Invalid key ("+str(key)+") to Vector")
 		
 	def __str__(self):
 		return "(" + str(self.x) + "," + str(self.y) + ")"
