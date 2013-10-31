@@ -62,6 +62,13 @@ class Player(PhysicalObject):
 		self.thrust = 300.0
 		self.rotateSpeed = 200.0
 		self.keyHandler = key.KeyStateHandler()
+		@self.window.event
+		def on_key_press(symbol, modifiers):
+			self.keyPress(symbol, modifiers)
+	
+	def keyPress(self, symbol, modifiers):
+		"""This function is run once per key press"""
+		pass
 
 	def update(self, dt):							#player updater, checks for key presses
 		super(Player, self).update(dt)
