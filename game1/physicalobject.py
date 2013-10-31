@@ -49,10 +49,13 @@ class PhysicalObject(pyglet.sprite.Sprite):
 		if planet.gravity != 0:
 			distance = Vector(planet.x,planet.y).distance((self.x,self.y))
 			distance2 = distance - planet.radius
-			if distance > planet.radius and distance2 < 300:
-				speedChange = ((1000000 * planet.gravity) / distance2**2) * dt
-				if self.thrust: speedChange = min(self.thrust * 0.75 * dt, speedChange)
-				self.vel += Vector(planet.x - self.x, planet.y - self.y).normalized() * speedChange
+			if distance2 < 300:
+				if distance > planet.radius: 
+					speedChange = ((1000000 * planet.gravity) / distance2**2) * dt
+				#else:
+				#	speedChange = -((1000000 * planet.gravity) / 200**2) * dt
+					if self.thrust: speedChange = min(self.thrust * 0.75 * dt, speedChange)
+					self.vel += Vector(planet.x - self.x, planet.y - self.y).normalized() * speedChange
 		
 class Player(PhysicalObject):
 	
@@ -61,6 +64,7 @@ class Player(PhysicalObject):
 		super(Player, self).__init__(img=playerImage, *args, **kwargs)
 		self.thrust = 300.0
 		self.rotateSpeed = 200.0
+		self.starmode = 0
 		self.keyHandler = key.KeyStateHandler()
 		@self.window.event
 		def on_key_press(symbol, modifiers):
@@ -68,7 +72,11 @@ class Player(PhysicalObject):
 	
 	def keyPress(self, symbol, modifiers):
 		"""This function is run once per key press"""
-		pass
+		if symbol == key.V:
+			self.starmode += 1
+			if self.starmode > 3: self.starmode = 0
+			self.window.modeLabel.text = str(self.starmode)
+			self.window.background.setNumStars(80, mode=self.starmode)
 
 	def update(self, dt):							#player updater, checks for key presses
 		super(Player, self).update(dt)

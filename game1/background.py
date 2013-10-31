@@ -10,27 +10,44 @@ class Background(object):
 		self.batch = pyglet.graphics.Batch()
 		self.setNumStars(stars)
 		self.window = pyglet.window.get_platform().get_default_display().get_windows()[0] #For globals
+		self.oldCamVel = Vector(0,0)
 
-	def setNumStars(self, num=80):
-		del self.stars[:]
+	def setNumStars(self, num=80, mode=0):
+		if mode % 2 == 0: 
+			del self.stars[:]
 		rnd = random.Random()
 		im = resources.loadImage("star.png")
 		
-		for i in range(num):
-			rnd.seed(5 + i*10293)
-			
-			corePos = Vector(rnd.random()*800*1.5, rnd.random()*600*1.5)
-			spr = pyglet.sprite.Sprite(im, x=corePos.x, y=corePos.y, batch=self.batch)
-			
-			size = rnd.random() ** 2.8
-			spr.scale = size / 2
-			spr.speed = size / 8
-			self.stars.append(spr)
+		if mode == 0:
+			for i in range(num):
+				rnd.seed(5 + i*10293)
+				
+				corePos = Vector(rnd.random()*800*1.5, rnd.random()*600*1.5)
+				spr = pyglet.sprite.Sprite(im, x=corePos.x, y=corePos.y, batch=self.batch)
+				
+				size = rnd.random() ** 2.8
+				spr.scale = size / 2
+				spr.speed = size / 6
+				self.stars.append(spr)
+		elif mode == 2:
+			for i in range(num):
+				rnd.seed(5 + i*10293)
+				
+				corePos = Vector(rnd.random()*800*1.5, rnd.random()*600*1.5)
+				spr = pyglet.sprite.Sprite(im, x=corePos.x, y=corePos.y, batch=self.batch)
+				
+				size = rnd.random()
+				spr.scale = (size ** 2.8) / 2
+				spr.speed = -size
+				self.stars.append(spr)
 
 	def update(self, dt):
 		w, h = self.window.width, self.window.height
 		camX, camY = self.window.camera.x, self.window.camera.y
-		velX, velY = self.window.playerShip.vel.x * dt, self.window.playerShip.vel.y * dt
+		if self.window.playerShip.starmode % 2 == 0:
+			velX, velY = self.window.playerShip.vel.x * dt, self.window.playerShip.vel.y * dt
+		else:
+			velX, velY = (camX - self.oldCamVel.x), (camY - self.oldCamVel.y)
 		
 		for spr in self.stars:
 			spr.x -= velX * spr.speed
@@ -43,5 +60,7 @@ class Background(object):
 				spr.y += h*1.5
 			if (spr.y - h*1.5) > camY:
 				spr.y -= h*1.5
+		self.oldCamVel = Vector(camX, camY)
+	
 	def draw(self):
 		self.batch.draw()

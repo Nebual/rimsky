@@ -11,8 +11,10 @@ mainBatch = pyglet.graphics.Batch() #"Misc" drawables
 planetBatch = pyglet.graphics.Batch() #Drawn just after Background
 
 text1 = pyglet.text.Label(text="Center", x=400, y=300, anchor_x="center", batch=mainBatch)
+gameWindow.modeLabel = pyglet.text.Label(text="0", x=400, y=350, anchor_x="center", batch=mainBatch)
 
 background = Background()
+gameWindow.background = background
 playerShip = physicalobject.Player(x=400, y=200)
 gameWindow.playerShip = playerShip
 gameWindow.push_handlers(playerShip.keyHandler)
