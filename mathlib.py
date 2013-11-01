@@ -1,4 +1,4 @@
-import math
+import math, random
 
 class Vector:
 	""" Represents a 2D vector
@@ -80,3 +80,6 @@ class Vector:
 		"""Returns a normalized copy of this"""
 		length = self.length()
 		return Vector(self.x / length, self.y / length)
+
+def VectorRand(rand=random):
+	return Vector(rand.random()*2 -1, rand.random()*2 -1).normalized()

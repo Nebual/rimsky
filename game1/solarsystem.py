@@ -16,6 +16,7 @@ class SolarSystem(object):
 		self.planets = []
 		self.rand = random.Random()
 		self.rand.seed(73789 + seed*14032)
+		
 		dist = 100
 		for i in range(self.rand.randint(1, 15)):
 			#Find a random new position that isn't too close to any other planets
@@ -27,6 +28,13 @@ class SolarSystem(object):
 			newPlanet.x = self.star.x + newX
 			newPlanet.y = self.star.y + newY
 			self.planets.append(newPlanet)
+		self.radius = dist
+		
+		self.minimap = pyglet.image.Texture.create(100,100)
+		greenCircle = resources.loadImage("circle_green.png", center=True)
+		self.minimap.blit_into(resources.loadImage("circle_gold.png", center=True).image_data, 50, 50, 0)
+		for planet in self.planets:
+			self.minimap.blit_into(greenCircle.image_data, int(50 + planet.x / dist * 50), int(50 + planet.y / dist * 50), 0)
 	
 	def farEnough(self, x, y):
 		for planet in self.planets:
