@@ -18,7 +18,7 @@ class SolarSystem(object):
 		self.rand.seed(73789 + seed*14032)
 		
 		dist = 100
-		for i in range(self.rand.randint(1, 15)):
+		for i in range(self.rand.randint(1, 10)):
 			#Find a random new position that isn't too close to any other planets
 			dist += 200 + self.rand.random()*200
 			newX, newY = Vector(self.rand.random()*2 -1, self.rand.random()*2 -1).normalized() * dist
@@ -27,6 +27,7 @@ class SolarSystem(object):
 			newPlanet = physicalobject.Planet(x=self.star.x, y=self.star.y, img=planetImage, batch=self.batch)
 			newPlanet.x = self.star.x + newX
 			newPlanet.y = self.star.y + newY
+			newPlanet.scale *= self.rand.choice([0.3, 0.6, 1.0])
 			self.planets.append(newPlanet)
 		self.radius = dist
 		

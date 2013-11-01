@@ -118,8 +118,8 @@ class Player(PhysicalObject):
 class Planet(PhysicalObject):
 	def __init__(self, *args, **kwargs): 
 		super(Planet, self).__init__(*args, **kwargs)
-		self.gravity = self.image.width*self.image.height*100			#Gravity scales with size of image
-		self.radius = (self.image.width + self.image.height) / 4
+		self.gravity = self.width*self.height*100			#Gravity scales with size of image
+		self.radius = (self.width + self.height) / 4
 
 	def update(self, dt):                                                        
 		super(Planet, self).update(dt)
