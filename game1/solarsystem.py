@@ -7,10 +7,10 @@ planetImages = [x for x in os.listdir("resources/planets/") if "png" in x or "jp
 
 class SolarSystem(object):
 	
-	def __init__(self, centerX=0, centerY=0, seed=0):
+	def __init__(self, x=0, y=0, seed=0):
 		self.batch = pyglet.graphics.Batch()
 		starImage = resources.loadImage("sun.png", center=True) 
-		self.star = physicalobject.Planet(x=centerX, centerY=y, img=starImage, batch=self.batch)
+		self.star = physicalobject.Planet(x=x, y=y, img=starImage, batch=self.batch)
 		self.planets = []
 		self.rand = random.Random()
 		self.rand.seed(73789 + seed*14032)
