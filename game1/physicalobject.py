@@ -17,7 +17,7 @@ class PhysicalObject(pyglet.sprite.Sprite):
 		
 		
 	def update(self, dt):					#updates position, accounting for time elapsed (dt)
-		for planet in self.window.planets:
+		for planet in self.window.currentSystem.planets:
 			self.gravitate(dt, planet)
 		self.x += self.vel.x * dt
 		self.y += self.vel.y * dt
@@ -120,7 +120,6 @@ class Planet(PhysicalObject):
 		super(Planet, self).__init__(*args, **kwargs)
 		self.gravity = self.image.width*self.image.height*100			#Gravity scales with size of image
 		self.radius = (self.image.width + self.image.height) / 4
-		self.window.planets.append(self)
 
 	def update(self, dt):                                                        
 		super(Planet, self).update(dt)
