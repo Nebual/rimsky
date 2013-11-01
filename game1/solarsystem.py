@@ -29,7 +29,7 @@ class SolarSystem(object):
 			self.planets.append(newPlanet)
 		self.radius = dist
 		
-		self.minimap = pyglet.image.Texture.create(100,100)
+		self.minimap = resources.loadImage("minimap.png")
 		greenCircle = resources.loadImage("circle_green.png", center=True)
 		self.minimap.blit_into(resources.loadImage("circle_gold.png", center=True).image_data, 50, 50, 0)
 		for planet in self.planets:
