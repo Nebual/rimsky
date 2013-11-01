@@ -3,7 +3,7 @@ import random, os
 import physicalobject, resources
 from mathlib import Vector
 
-planetImages = os.listdir("resources/planets/")
+planetImages = [x for x in os.listdir("resources/planets/") if "png" in x or "jpg" in x]
 
 class SolarSystem(object):
 	
