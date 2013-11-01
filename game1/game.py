@@ -21,7 +21,7 @@ gameWindow.playerShip = playerShip
 gameWindow.push_handlers(playerShip.keyHandler)
 
 gameWindow.camera = Vector(0,0)
-gameWindow.currentSystem = solarsystem.SolarSystem(x=-1000, y=2, seed=0)
+gameWindow.currentSystem = solarsystem.SolarSystem(x=400, y=300)
 
 gameWindow.hud = hud.HUD(window=gameWindow, batch=gameWindow.hudBatch)
 

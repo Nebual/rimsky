@@ -7,12 +7,10 @@ planetImages = [x for x in os.listdir("resources/planets/") if "png" in x or "jp
 
 class SolarSystem(object):
 	
-	def __init__(self, x=0, y=0, seed=0):
+	def __init__(self, centerX=0, centerY=0, seed=0):
 		self.batch = pyglet.graphics.Batch()
-		self.x = 0
-		self.y = 0
 		starImage = resources.loadImage("sun.png", center=True) 
-		self.star = physicalobject.Planet(x= self.x, y=self.y, img=starImage, batch=self.batch)
+		self.star = physicalobject.Planet(x=centerX, centerY=y, img=starImage, batch=self.batch)
 		self.planets = []
 		self.rand = random.Random()
 		self.rand.seed(73789 + seed*14032)
@@ -36,9 +34,3 @@ class SolarSystem(object):
 		self.minimap.blit_into(resources.loadImage("circle_gold.png", center=True).image_data, 50, 50, 0)
 		for planet in self.planets:
 			self.minimap.blit_into(greenCircle.image_data, int(50 + planet.x / dist * 50), int(50 + planet.y / dist * 50), 0)
-	
-	def farEnough(self, x, y):
-		for planet in self.planets:
-			if Vector(x, y).distance((planet.x, planet.y)) < 300:
-				return False
-		return True
