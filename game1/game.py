@@ -2,17 +2,17 @@ import os, sys
 sys.path.append("..")
 import pyglet
 
-import physicalobject, resources, solarsystem
+import physicalobject, resources, solarsystem, hud
 from background import Background
 from mathlib import Vector
 
+pyglet.clock.set_fps_limit(60)
 gameWindow = pyglet.window.Window(800, 600)
 
 gameWindow.mainBatch = pyglet.graphics.Batch() #"Misc" drawables
-gameWindow.planetBatch = pyglet.graphics.Batch() #Drawn just after Background
+gameWindow.hudBatch = pyglet.graphics.Batch() #Drawn after everything
 
 text1 = pyglet.text.Label(text="Center", x=400, y=300, anchor_x="center", batch=gameWindow.mainBatch)
-gameWindow.modeLabel = pyglet.text.Label(text="0", x=400, y=350, anchor_x="center", batch=gameWindow.mainBatch)
 
 background = Background()
 gameWindow.background = background
@@ -23,24 +23,29 @@ gameWindow.push_handlers(playerShip.keyHandler)
 gameWindow.camera = Vector(0,0)
 gameWindow.currentSystem = solarsystem.SolarSystem(x=-1000, y=2)
 
+gameWindow.hud = hud.HUD(window=gameWindow, batch=gameWindow.hudBatch)
+
 
 def update(dt):
 	playerShip.update(dt)
 	background.update(dt)
+	gameWindow.hud.update(dt)
 	
 @gameWindow.event
 def on_draw():
-	gameWindow.clear()
+	pyglet.gl.glClear(pyglet.gl.GL_COLOR_BUFFER_BIT)
 	
 	pyglet.gl.glLoadIdentity() #Set camera to middle
 	pyglet.gl.glTranslatef(-gameWindow.camera[0], -gameWindow.camera[1], 0.5) #Set camera position
 
 	background.draw()
-	gameWindow.planetBatch.draw()
 	gameWindow.currentSystem.batch.draw()
 	gameWindow.mainBatch.draw()
 	playerShip.draw()
 	
+	pyglet.gl.glLoadIdentity()
+	gameWindow.hudBatch.draw()
+	
 if __name__ == '__main__':
-	pyglet.clock.schedule_interval(update, 1/120.0)
+	pyglet.clock.schedule_interval(update, 1/60.0)
 	pyglet.app.run()

@@ -77,7 +77,7 @@ class Player(PhysicalObject):
 		if symbol == key.V:
 			self.starmode += 1
 			if self.starmode > 3: self.starmode = 0
-			self.window.modeLabel.text = str(self.starmode)
+			self.window.modeLabel.text = "Starmode: "+str(self.starmode)
 			self.window.background.setNumStars(80, mode=self.starmode)
 
 	def update(self, dt):							#player updater, checks for key presses
