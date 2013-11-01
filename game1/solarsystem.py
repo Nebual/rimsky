@@ -16,14 +16,11 @@ class SolarSystem(object):
 		self.planets = []
 		self.rand = random.Random()
 		self.rand.seed(73789 + seed*14032)
+		dist = 100
 		for i in range(self.rand.randint(1, 15)):
 			#Find a random new position that isn't too close to any other planets
-			while True:
-				newX = self.rand.randint(500, 1000)*self.rand.choice([1, -1])
-				newY = self.rand.randint(500, 1000)*self.rand.choice([1, -1])			
-				if self.farEnough(newX, newY):
-					break	
-			
+			dist += 200 + self.rand.random()*200
+			newX, newY = Vector(self.rand.random()*2 -1, self.rand.random()*2 -1).normalized() * dist
 			
 			planetImage = resources.loadImage("planets/"+self.rand.choice(planetImages), center=True)
 			newPlanet = physicalobject.Planet(x=self.star.x, y=self.star.y, img=planetImage, batch=self.batch)
