@@ -1,13 +1,22 @@
 import os, sys
 sys.path.append("..")
+from optparse import OptionParser
 import pyglet
 
 import physicalobject, resources, solarsystem, hud
 from background import Background
 from mathlib import Vector
 
+argparser = OptionParser()
+argparser.add_option("-f", "--fullscreen", action="store_true", dest="fullscreen", default=False, help="Load game at max resolution, in a nobordered window")
+
+options, args = argparser.parse_args()
+if options.fullscreen:
+	screen = pyglet.window.get_platform().get_default_display().get_default_screen()
+	gameWindow = pyglet.window.Window(screen.width, screen.height, style=pyglet.window.Window.WINDOW_STYLE_BORDERLESS)
+else:
+	gameWindow = pyglet.window.Window(800, 600)
 pyglet.clock.set_fps_limit(60)
-gameWindow = pyglet.window.Window(800, 600, style=pyglet.window.Window.WINDOW_STYLE_BORDERLESS)
 
 gameWindow.mainBatch = pyglet.graphics.Batch() #"Misc" drawables
 gameWindow.hudBatch = pyglet.graphics.Batch() #Drawn after everything
