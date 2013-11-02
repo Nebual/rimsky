@@ -7,12 +7,10 @@ from background import Background
 from mathlib import Vector
 
 pyglet.clock.set_fps_limit(60)
-gameWindow = pyglet.window.Window(800, 600)
+gameWindow = pyglet.window.Window(800, 600, style=pyglet.window.Window.WINDOW_STYLE_BORDERLESS)
 
 gameWindow.mainBatch = pyglet.graphics.Batch() #"Misc" drawables
 gameWindow.hudBatch = pyglet.graphics.Batch() #Drawn after everything
-
-text1 = pyglet.text.Label(text="Center", x=400, y=300, anchor_x="center", batch=gameWindow.mainBatch)
 
 background = Background()
 gameWindow.background = background

@@ -71,15 +71,30 @@ class Player(PhysicalObject):
 		@self.window.event
 		def on_key_press(symbol, modifiers):
 			self.keyPress(symbol, modifiers)
+		@self.window.event
+		def on_mouse_press(x, y, button, modifiers): self.mousePress(x, y, button, modifiers)
+	
+	def mousePress(self, x, y, button, modifiers):
+		vec = self.window.camera + (x, y)
+		if button == pyglet.window.mouse.LEFT:
+			planet = self.window.currentSystem.nearestPlanet(vec)
+			if vec.distance((planet.x, planet.y)) < planet.radius:
+				self.window.hud.select(planet)
 	
 	def keyPress(self, symbol, modifiers):
 		"""This function is run once per key press"""
 		if symbol == key.V:
 			self.starmode += 1
 			if self.starmode > 3: self.starmode = 0
-			self.window.modeLabel.text = "Starmode: "+str(self.starmode)
+			self.window.hud.modeLabel.text = "Starmode: "+str(self.starmode)
 			self.window.background.setNumStars(80, mode=self.starmode)
-
+		elif symbol == key.L:
+			if not self.window.hud.selected:
+				self.window.hud.select(self.window.currentSystem.nearestPlanet(Vector(self.x, self.y)))
+			else:
+				print "Too far 2 land lol"
+		elif symbol == key.Z:
+			self.window.hud.deselect()
 	def update(self, dt):							#player updater, checks for key presses
 		super(Player, self).update(dt)
 		
