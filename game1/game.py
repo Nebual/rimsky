@@ -22,6 +22,10 @@ class GameWindow(pyglet.window.Window):
 		self.camera = Vector(0,0)
 		self.currentSystem = solarsystem.SolarSystem(x=400, y=300)
 
+		#Basically targetting either 1920x1080 (and 1920x1200) at 1, or 1366x768 ish at 0.5
+		self.uiScale = 1
+		if self.width < 1400 or self.height < 800: self.uiScale = 0.5
+		
 		self.hud = hud.HUD(window=self, batch=self.hudBatch)
 	
 		pyglet.clock.schedule_interval(self.update, 1/60.0)

@@ -1,15 +1,15 @@
 import pyglet
 import resources
 
+group0 = pyglet.graphics.OrderedGroup(0)
+group1 = pyglet.graphics.OrderedGroup(1)
+
 class HUD(object): 
 	selected = None
 	def __init__(self, window, batch):
 		self.window, self.batch = window, batch
 		
 		self.hudScale = 1.0
-		
-		group0 = pyglet.graphics.OrderedGroup(0)
-		group1 = pyglet.graphics.OrderedGroup(1)
 		
 		self.hudX, self.hudY = hudX, hudY = window.width-100, window.height-200 - 100*self.hudScale
 		self.minimap = pyglet.sprite.Sprite(img=window.currentSystem.minimap, x=window.width-100*self.hudScale, y=hudY+200, batch=batch, group=group0)
@@ -32,6 +32,44 @@ class HUD(object):
 		self.selectionSprite.x, self.selectionSprite.y = sprite.x, sprite.y
 		self.selectionSprite.scale = (sprite.radius + 20) / 100.0
 		self.selectionSprite.visible = True
+		return sprite
 	def deselect(self):
 		self.selected = None
 		self.selectionSprite.visible = False
+
+class Frame(object):
+	def __init__(self):
+		self.window = pyglet.window.get_platform().get_default_display().get_windows()[0]
+		self.batch = pyglet.graphics.Batch()
+		
+	def start(self):
+		self.window.push_handlers(self)
+		self.window.paused = True
+		pyglet.clock.schedule_interval(self.update, 1/60.0)
+	def stop(self):
+		self.window.pop_handlers()
+		self.window.paused = False
+		pyglet.clock.unschedule(self.update)
+	
+	def on_key_press(self, symbol, modifiers):
+		print symbol
+		if symbol == pyglet.window.key.ESCAPE: self.stop()
+		return pyglet.event.EVENT_HANDLED
+	
+	def on_draw(self):
+		pyglet.gl.glLoadIdentity()
+		self.batch.draw()
+		
+	def update(self, dt): pass
+
+largeWindow = resources.loadImage("largewindow.png", center=True)
+
+class PlanetFrame(Frame):
+	def __init__(self, title="Unnamed", *args, **kwargs):
+		super(PlanetFrame, self).__init__(*args, **kwargs)
+		
+		self.background = pyglet.sprite.Sprite(img=largeWindow, x=self.window.width/2, y=self.window.height/2, batch=self.batch, group=group0)
+		self.background.scale = self.window.uiScale
+		
+		self.titleLabel = pyglet.text.Label(text="Welcome to "+title, x=self.window.width/2, y=self.window.height/2 + 400*self.window.uiScale - 40, anchor_x="center", batch=self.batch, group=group1)
+		

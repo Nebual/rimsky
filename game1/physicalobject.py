@@ -1,6 +1,6 @@
 import pyglet
 from pyglet.window import key
-import resources
+import resources, hud
 import math
 import mathlib
 
@@ -98,13 +98,23 @@ class Player(PhysicalObject):
 			self.window.hud.modeLabel.text = "Starmode: "+str(self.starmode)
 			self.window.background.setNumStars(80, mode=self.starmode)
 		elif symbol == key.L:
-				self.window.hud.select(self.window.currentSystem.nearestPlanet(Vector(self.x, self.y)))
+			planet = self.window.hud.select(self.window.currentSystem.nearestPlanet(Vector(self.x, self.y)))
+			if isinstance(planet, Planet):
+				if Vector(*self.position).distance(planet.position) < (planet.radius + 20):
+					print self.vel.length()
+					if self.vel.length() < 30:
+						self.window.temp = hud.PlanetFrame()
+						self.window.temp.start()
+					else:
+						print "You're moving too fast to land!" #TODO: These should be displayed ingame
+				else:
+					print "You're too far from the planet to land!"
 		elif symbol == key.Z:
 			self.window.hud.deselect()
 			
 	def keyRelease(self, symbol, modifiers):
-		if symbol == key.L:
-			self.oriented = False					#reset oriented to false when not pressing L
+		if symbol == key.T:
+			self.oriented = False					#reset oriented to false when not pressing T
 			
 	def update(self, dt):							#player updater, checks for key presses
 		super(Player, self).update(dt)	
@@ -119,7 +129,7 @@ class Player(PhysicalObject):
 			self.increaseThrust(dt, -1)
 		if self.keyHandler[key.X]:					#brake
 			self.brake(dt)
-		if self.keyHandler[key.L]:
+		if self.keyHandler[key.T]:
 			self.pathToOrbit(dt)
 		self.updateCamera(dt)
 		
