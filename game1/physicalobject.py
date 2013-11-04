@@ -2,6 +2,7 @@ import pyglet
 from pyglet.window import key
 import resources
 import math
+import mathlib
 
 from mathlib import Vector
 
@@ -13,8 +14,7 @@ class PhysicalObject(pyglet.sprite.Sprite):
 		self.maxSpeed = 600
 		self.vel = Vector(0.0, 0.0)
 		self.window = pyglet.window.get_platform().get_default_display().get_windows()[0]
-		self.gravity = 0
-		
+		self.gravity = 0		
 		
 	def update(self, dt):					#updates position, accounting for time elapsed (dt)
 		for planet in self.window.currentSystem.planets:
@@ -66,11 +66,20 @@ class Player(PhysicalObject):
 		super(Player, self).__init__(img=playerImage, *args, **kwargs)
 		self.thrust = 300.0
 		self.rotateSpeed = 200.0
+		self.rotation = 135
 		self.starmode = 0
+		self.oriented = False							#for pathing
+		self.orbit = False
+		self.pathAngle = 0
 		self.keyHandler = key.KeyStateHandler()
 		@self.window.event
 		def on_key_press(symbol, modifiers):
 			self.keyPress(symbol, modifiers)
+			
+		@self.window.event
+		def on_key_release(symbol, modifiers):
+			self.keyRelease(symbol, modifiers)
+			
 		@self.window.event
 		def on_mouse_press(x, y, button, modifiers): self.mousePress(x, y, button, modifiers)
 	
@@ -89,27 +98,29 @@ class Player(PhysicalObject):
 			self.window.hud.modeLabel.text = "Starmode: "+str(self.starmode)
 			self.window.background.setNumStars(80, mode=self.starmode)
 		elif symbol == key.L:
-			if not self.window.hud.selected:
 				self.window.hud.select(self.window.currentSystem.nearestPlanet(Vector(self.x, self.y)))
-			else:
-				print "Too far 2 land lol"
 		elif symbol == key.Z:
 			self.window.hud.deselect()
+			
+	def keyRelease(self, symbol, modifiers):
+		if symbol == key.L:
+			self.oriented = False					#reset oriented to false when not pressing L
+			
 	def update(self, dt):							#player updater, checks for key presses
-		super(Player, self).update(dt)
+		super(Player, self).update(dt)	
 		
 		if self.keyHandler[key.LEFT]:
-			self.rotation -= self.rotateSpeed*dt
+			self.rotation -= self.rotateSpeed * dt
 		if self.keyHandler[key.RIGHT]:
-			self.rotation += self.rotateSpeed*dt
+			self.rotation += self.rotateSpeed * dt
 		if self.keyHandler[key.UP]:
 			self.increaseThrust(dt, 1)
 		if self.keyHandler[key.DOWN]:
 			self.increaseThrust(dt, -1)
 		if self.keyHandler[key.X]:					#brake
-			self.vel.x -= (self.vel.x > 0 and 1 or -1) * min(self.thrust * 0.75 * dt, abs(self.vel.x))
-			self.vel.y -= (self.vel.y > 0 and 1 or -1) * min(self.thrust * 0.75 * dt, abs(self.vel.y))
-		
+			self.brake(dt)
+		if self.keyHandler[key.L]:
+			self.pathToOrbit(dt)
 		self.updateCamera(dt)
 		
 	def updateCamera(self, dt):
@@ -129,6 +140,50 @@ class Player(PhysicalObject):
 		s = self.vel.length()
 		if s > self.maxSpeed:
 			self.vel *= self.maxSpeed / s
+	def brake(self, dt):
+		self.vel.x -= (self.vel.x > 0 and 1 or -1) * min(self.thrust * 0.75 * dt, abs(self.vel.x))
+		self.vel.y -= (self.vel.y > 0 and 1 or -1) * min(self.thrust * 0.75 * dt, abs(self.vel.y))		
+			
+	def pathToOrbit(self, dt):
+		if not self.orbit:	
+			destination = self.window.currentSystem.nearestPlanet(Vector(self.x, self.y))
+			path = Vector(destination.x - self.x, destination.y - self.y)					#line from player to destination
+			if self.vel != (0, 0) and not self.oriented:
+				self.brake(dt)
+				self.rotateToPath(path, dt)
+			elif path.length() > destination.radius + 100:
+				self.increaseThrust(dt, 0.25)
+			elif path.length() < destination.radius + 100 and path.length() > destination.radius:
+				if math.fabs(self.vel.x) > 0 and math.fabs(self.vel.y) > 0:
+					self.brake(dt)
+					if not mathlib.approxCoTerminal(self.rotation, self.pathAngle-90, 2):
+						self.rotation -= self.rotateSpeed * dt
+					else:
+						self.orbit = True
+						self.increaseThrust(dt, 10)
+												
+				
+		#move toward it so long as L held down
+		#if we are close enough, brake then burst once, perpendicular to gravity vector.
+		
+	def rotateToPath(self, path, dt):
+		try:
+			self.pathAngle = -1*(math.degrees(math.atan2(float(path.y), path.x)))		#angle of path relative to pos x axis. evaluates between 0 and +180 if below the x-axis, otherwise between 0 and -180, so we have to mess with this a bit		
+		except ZeroDivisionError:										
+			if path.y >= 0:												# if path is directly above us
+				self.pathAngle = -90
+			elif path.y < 0:											# if path is directly below us
+				self.pathAngle = 90				
+		if mathlib.approxCoTerminal(self.pathAngle, self.rotation, 3):
+			self.oriented = True
+		else:
+			#playerAngle = mathlib.smallestCoTerminal(self.rotation)	#code for figuring out whether to turn left or right
+			#targetAngle = mathlib.smallestCoTerminal(angle)
+			#difference = targetAngle - playerAngle
+			#if math.fabs(difference) <= 180:
+			self.rotation += self.rotateSpeed * dt
+			#elif math.fabs(difference) > 180:
+			#	self.rotation -= self.rotateSpeed * dt
 
 class Planet(PhysicalObject):
 	def __init__(self, *args, **kwargs): 

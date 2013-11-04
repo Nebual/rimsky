@@ -36,7 +36,8 @@ class SolarSystem(object):
 			self.minimap.blit_into(greenCircle.image_data, int(50 + planet.x / dist * 50), int(50 + planet.y / dist * 50), 0)
 	
 	def nearestPlanet(self, vec):
-		nearestDist = 999999
+		nearestDist = vec.distance(Vector(self.star.x, self.star.y))
+		nearest = self.star
 		for planet in self.planets:
 			dist = vec.distance((planet.x, planet.y))
 			if dist < nearestDist:
