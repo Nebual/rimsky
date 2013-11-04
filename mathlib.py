@@ -123,3 +123,9 @@ def smallestCoTerminal(angle):						#returns the smallest positive coterminal an
 		while angle < 0:
 			angle += 360
 	return angle
+	
+def angDiff(target, current):
+	return (current - target + 180) % 360 - 180
+
+def sign(num):
+	return (num > 0 and 1) or (num < 0 and -1) or 0

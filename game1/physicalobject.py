@@ -155,22 +155,24 @@ class Player(PhysicalObject):
 		self.vel.y -= (self.vel.y > 0 and 1 or -1) * min(self.thrust * 0.75 * dt, abs(self.vel.y))		
 			
 	def pathToOrbit(self, dt):
-		if not self.orbit:	
-			destination = self.window.currentSystem.nearestPlanet(Vector(self.x, self.y))
+		#if not self.orbit:	
+			destination = self.window.hud.selected
 			path = Vector(destination.x - self.x, destination.y - self.y)					#line from player to destination
-			if self.vel != (0, 0) and not self.oriented:
-				self.brake(dt)
-				self.rotateToPath(path, dt)
-			elif path.length() > destination.radius + 100:
-				self.increaseThrust(dt, 0.25)
-			elif path.length() < destination.radius + 100 and path.length() > destination.radius:
-				if math.fabs(self.vel.x) > 0 and math.fabs(self.vel.y) > 0:
-					self.brake(dt)
-					if not mathlib.approxCoTerminal(self.rotation, self.pathAngle-90, 2):
-						self.rotation -= self.rotateSpeed * dt
-					else:
-						self.orbit = True
-						self.increaseThrust(dt, 10)
+			self.rotateToPath(path, dt)
+			#if self.vel != (0, 0) and not mathlib.approxCoTerminal(self.pathAngle, self.rotation, 6):
+			#	self.brake(dt)
+			if mathlib.approxCoTerminal(self.pathAngle, self.rotation, 10):
+				#Are we close enough to start driving?
+				if path.length() > destination.radius + 100:
+					self.increaseThrust(dt, 0.25)
+				elif path.length() < destination.radius + 100 and path.length() > destination.radius:
+					if math.fabs(self.vel.x) > 0 and math.fabs(self.vel.y) > 0:
+						self.brake(dt)
+						if not mathlib.approxCoTerminal(self.rotation, self.pathAngle-90, 2):
+							self.rotation -= self.rotateSpeed * dt
+						else:
+							#self.orbit = True
+							self.increaseThrust(dt, 10)
 												
 				
 		#move toward it so long as L held down
@@ -184,14 +186,15 @@ class Player(PhysicalObject):
 				self.pathAngle = -90
 			elif path.y < 0:											# if path is directly below us
 				self.pathAngle = 90				
-		if mathlib.approxCoTerminal(self.pathAngle, self.rotation, 3):
-			self.oriented = True
-		else:
+		#if mathlib.approxCoTerminal(self.pathAngle, self.rotation, 6):
+		#	self.oriented = True
+		#else:
 			#playerAngle = mathlib.smallestCoTerminal(self.rotation)	#code for figuring out whether to turn left or right
 			#targetAngle = mathlib.smallestCoTerminal(angle)
 			#difference = targetAngle - playerAngle
 			#if math.fabs(difference) <= 180:
-			self.rotation += self.rotateSpeed * dt
+		angdiff = mathlib.angDiff(self.pathAngle, self.rotation)
+		self.rotation += min(self.rotateSpeed * dt, abs(angdiff)) * -mathlib.sign(angdiff)
 			#elif math.fabs(difference) > 180:
 			#	self.rotation -= self.rotateSpeed * dt
 
