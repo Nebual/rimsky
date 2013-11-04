@@ -83,3 +83,43 @@ class Vector:
 
 def VectorRand(rand=random):
 	return Vector(rand.random()*2 -1, rand.random()*2 -1).normalized()
+	
+def isCoTerminal(angle, angle2):
+	if angle > 0:				#if angle is positive, keep subtracting 360 until it is between 0 and +360
+		while angle >= 360:
+			angle -= 360
+	elif angle < 0:
+		while angle < 0:
+			angle += 360
+			
+	if angle2 > 0:				#if angle is negative, keep adding 360 until it is between 0 and +360
+		while angle2 >= 360:
+			angle2 -= 360
+	elif angle2 < 0:
+		while angle2 < 0:
+			angle2 += 360			
+			
+	if angle == angle2:			#if angles are the same, original angles are coterminal
+		return True
+	else:
+		return False
+		
+def approxCoTerminal(angle, angle2, tolerance):		#returns true if angle2 is coterminal with angle + or - tolerance
+	angle = int(angle)								#make angles ints if they arent already
+	angle2 = int(angle2)
+	testAngle = angle + tolerance					#max value we want to test
+	minAngle = angle - tolerance					#min value we want to test
+	while testAngle >= minAngle:
+		if isCoTerminal(testAngle, angle2):
+			return True
+		testAngle -= 1
+	return False
+
+def smallestCoTerminal(angle):						#returns the smallest positive coterminal angle
+	if angle > 0:				
+		while angle >= 360:
+			angle -= 360
+	elif angle < 0:
+		while angle < 0:
+			angle += 360
+	return angle
