@@ -58,6 +58,7 @@ class PhysicalObject(pyglet.sprite.Sprite):
 				#	speedChange = -((1000000 * planet.gravity) / 200**2) * dt
 					if self.thrust: speedChange = min(self.thrust * 0.75 * dt, speedChange)
 					self.vel += Vector(planet.x - self.x, planet.y - self.y).normalized() * speedChange
+						
 		
 class Player(PhysicalObject):
 	
@@ -130,7 +131,7 @@ class Player(PhysicalObject):
 		if self.keyHandler[key.X]:					#brake
 			self.brake(dt)
 		if self.keyHandler[key.T]:
-			self.pathToOrbit(dt)
+			self.pathToDest(dt)
 		self.updateCamera(dt)
 		
 	def updateCamera(self, dt):
@@ -154,29 +155,16 @@ class Player(PhysicalObject):
 		self.vel.x -= (self.vel.x > 0 and 1 or -1) * min(self.thrust * 0.75 * dt, abs(self.vel.x))
 		self.vel.y -= (self.vel.y > 0 and 1 or -1) * min(self.thrust * 0.75 * dt, abs(self.vel.y))		
 			
-	def pathToOrbit(self, dt):
-		#if not self.orbit:	
+	def pathToDest(self, dt):		#paths to the selected destination
 			destination = self.window.hud.selected
 			path = Vector(destination.x - self.x, destination.y - self.y)					#line from player to destination
 			self.rotateToPath(path, dt)
-			#if self.vel != (0, 0) and not mathlib.approxCoTerminal(self.pathAngle, self.rotation, 6):
-			#	self.brake(dt)
 			if mathlib.approxCoTerminal(self.pathAngle, self.rotation, 10):
 				#Are we close enough to start driving?
-				if path.length() > destination.radius + 100:
+				if path.length() >= 200:	#if we're further than twice the object away
 					self.increaseThrust(dt, 0.25)
-				elif path.length() < destination.radius + 100 and path.length() > destination.radius:
-					if math.fabs(self.vel.x) > 0 and math.fabs(self.vel.y) > 0:
-						self.brake(dt)
-						if not mathlib.approxCoTerminal(self.rotation, self.pathAngle-90, 2):
-							self.rotation -= self.rotateSpeed * dt
-						else:
-							#self.orbit = True
-							self.increaseThrust(dt, 10)
-												
-				
-		#move toward it so long as L held down
-		#if we are close enough, brake then burst once, perpendicular to gravity vector.
+				elif path.length() < 25:
+					self.brake(dt)				
 		
 	def rotateToPath(self, path, dt):
 		try:
@@ -186,23 +174,17 @@ class Player(PhysicalObject):
 				self.pathAngle = -90
 			elif path.y < 0:											# if path is directly below us
 				self.pathAngle = 90				
-		#if mathlib.approxCoTerminal(self.pathAngle, self.rotation, 6):
-		#	self.oriented = True
-		#else:
-			#playerAngle = mathlib.smallestCoTerminal(self.rotation)	#code for figuring out whether to turn left or right
-			#targetAngle = mathlib.smallestCoTerminal(angle)
-			#difference = targetAngle - playerAngle
-			#if math.fabs(difference) <= 180:
 		angdiff = mathlib.angDiff(self.pathAngle, self.rotation)
 		self.rotation += min(self.rotateSpeed * dt, abs(angdiff)) * -mathlib.sign(angdiff)
-			#elif math.fabs(difference) > 180:
-			#	self.rotation -= self.rotateSpeed * dt
 
 class Planet(PhysicalObject):
 	def __init__(self, *args, **kwargs): 
 		super(Planet, self).__init__(*args, **kwargs)
-		self.gravity = self.width*self.height*100			#Gravity scales with size of image
+		self.gravity = self.width*self.height*300			#Gravity scales with size of image
 		self.radius = (self.width + self.height) / 4
 
 	def update(self, dt):                                                        
 		super(Planet, self).update(dt)
+		
+class Sun(Planet):
+	isSun = True

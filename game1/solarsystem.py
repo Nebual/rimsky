@@ -9,12 +9,13 @@ class SolarSystem(object):
 	
 	def __init__(self, x=0, y=0, seed=0):
 		self.batch = pyglet.graphics.Batch()
-		starImage = resources.loadImage("sun.png", center=True) 
-		self.star = physicalobject.Planet(x=x, y=y, img=starImage, batch=self.batch)
 		self.planets = []
+		starImage = resources.loadImage("sun.png", center=True) 
+		self.star = physicalobject.Sun(x=x, y=y, img=starImage, batch=self.batch)
+		self.planets.append(self.star)
 		self.rand = random.Random()
 		self.rand.seed(73789 + seed*14032)
-		
+
 		dist = 100
 		for i in range(self.rand.randint(1, 10)):
 			#Find a random new position that isn't too close to any other planets
