@@ -117,10 +117,8 @@ class Player(PhysicalObject):
 			planet = self.window.hud.select(self.window.currentSystem.nearestPlanet(Vector(self.x, self.y)))
 			if isinstance(planet, Planet):
 				if Vector(*self.position).distance(planet.position) < (planet.radius + 20):
-					print self.vel.length()
 					if self.vel.length() < 30:
-						self.window.temp = hud.PlanetFrame()
-						self.window.temp.start()
+						self.window.temp = hud.PlanetFrame(planet)
 					else:
 						print "You're moving too fast to land!" #TODO: These should be displayed ingame
 				else:
@@ -129,9 +127,8 @@ class Player(PhysicalObject):
 			self.window.hud.deselect()
 			
 	def keyRelease(self, symbol, modifiers):
-		if symbol == key.T:
-			self.oriented = False					#reset oriented to false when not pressing T
-			
+		pass
+		
 	def update(self, dt):							#player updater, checks for key presses
 		super(Player, self).update(dt)	
 		
@@ -192,13 +189,37 @@ class Player(PhysicalObject):
 		self.window.gameObjs.append(bullet)		
 
 class Planet(PhysicalObject):
+	name = "undefined"
+	habited = False
+	hasTrade = False
+	hasMissions = False
+	hasParts = False
+	hasShipyard = False
+	
 	def __init__(self, *args, **kwargs): 
 		super(Planet, self).__init__(*args, **kwargs)
 		self.gravity = self.width*self.height*300			#Gravity scales with size of image
 		self.radius = (self.width + self.height) / 4
 
-	def update(self, dt):                                                        
-		super(Planet, self).update(dt)
+	def populate(self, rand, kind):
+		if "rock" in kind:
+			if "garden" in kind:
+				self.name = "GDN_%.4d" % rand.randrange(1,9999)
+				self.habited = rand.random() < 0.75
+				self.hasTrade = self.habited
+				self.hasMissions = self.habited
+				if self.habited:
+					self.hasParts = rand.random() < 0.6
+					if self.hasParts: 
+						self.hasShipyard = rand.random() < 0.5
+			else:
+				self.name = "RCK_%.4d" % rand.randrange(1,9999)
+				self.habited = rand.random() < 0.25
+				self.hasTrade = self.habited
+				self.hasMissions = self.habited
+		else:
+			#Gas
+			self.name = "GAS_%.4d" % rand.randrange(1,9999)
 		
 class Sun(Planet):
 	isSun = True

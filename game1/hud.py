@@ -3,6 +3,7 @@ import resources
 
 group0 = pyglet.graphics.OrderedGroup(0)
 group1 = pyglet.graphics.OrderedGroup(1)
+group2 = pyglet.graphics.OrderedGroup(2)
 
 class HUD(object): 
 	selected = None
@@ -37,10 +38,37 @@ class HUD(object):
 		self.selected = None
 		self.selectionSprite.visible = False
 
+largeWindow = resources.loadImage("largewindow.png", center=True)
+buttonWide = resources.loadImage("button_wide.png", center=True)
+
 class Frame(object):
-	def __init__(self):
+	def __init__(self, title="Unnamed Frame", scale=1.0, start=True):
 		self.window = pyglet.window.get_platform().get_default_display().get_windows()[0]
 		self.batch = pyglet.graphics.Batch()
+		self.buttons = []
+		
+		self.scale = self.window.uiScale * scale
+		
+		self.background = pyglet.sprite.Sprite(img=largeWindow, x=self.window.width/2, y=self.window.height/2, batch=self.batch, group=group0)
+		self.background.scale = self.scale
+		
+		self.titleLabel = pyglet.text.Label(text=title, x=self.window.width/2, y=self.window.height/2 + 400*self.scale - 40, anchor_x="center", batch=self.batch, group=group1)
+		
+		if start: self.start()
+		
+	def addButton(self,x,y,text,callback):
+		sprite = pyglet.sprite.Sprite(img=buttonWide, x=self.window.width/2 + x*self.scale, y=self.window.height/2 + y*self.scale, batch=self.batch, group=group1)
+		sprite.scale = self.scale
+		sprite.label = pyglet.text.Label(text=text, x=sprite.x, y=sprite.y, anchor_x="center", anchor_y="center", batch=self.batch, group=group2)
+		sprite.pressed = callback
+		self.buttons.append(sprite)
+		return sprite
+	def on_mouse_press(self, x, y, button, modifiers):
+		for but in self.buttons:
+			if (but.x - but.width/2 < x < but.x + but.width/2) and (but.y - but.height/2 < y < but.y + but.height/2):
+				but.pressed()
+				break
+		return True
 		
 	def start(self):
 		self.window.push_handlers(self)
@@ -52,7 +80,6 @@ class Frame(object):
 		pyglet.clock.unschedule(self.update)
 	
 	def on_key_press(self, symbol, modifiers):
-		print symbol
 		if symbol == pyglet.window.key.ESCAPE: self.stop()
 		return pyglet.event.EVENT_HANDLED
 	
@@ -62,14 +89,17 @@ class Frame(object):
 		
 	def update(self, dt): pass
 
-largeWindow = resources.loadImage("largewindow.png", center=True)
 
 class PlanetFrame(Frame):
-	def __init__(self, title="Unnamed", *args, **kwargs):
-		super(PlanetFrame, self).__init__(*args, **kwargs)
+	def __init__(self, planet, *args, **kwargs):
+		super(PlanetFrame, self).__init__(title="Welcome to "+planet.name, *args, **kwargs)
+		self.planet = planet
 		
-		self.background = pyglet.sprite.Sprite(img=largeWindow, x=self.window.width/2, y=self.window.height/2, batch=self.batch, group=group0)
-		self.background.scale = self.window.uiScale
+		if planet.hasTrade: self.addButton(-300, 200, "Trade Center", self.openTrade)
+		if planet.hasMissions: self.addButton(-300, 100, "Mission Bounty Board", self.openMissions)
 		
-		self.titleLabel = pyglet.text.Label(text="Welcome to "+title, x=self.window.width/2, y=self.window.height/2 + 400*self.window.uiScale - 40, anchor_x="center", batch=self.batch, group=group1)
-		
+		self.addButton(-300, -300, "Depart", self.stop)
+	def openTrade(self):
+		self.tradeWindow = Frame("Trade Center", scale=0.8)
+	def openMissions(self):
+		self.missionWindow = Frame("Mission Bounty Board", scale=0.8)

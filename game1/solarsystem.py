@@ -22,10 +22,10 @@ class SolarSystem(object):
 			dist += 200 + self.rand.random()*200
 			newX, newY = Vector(self.rand.random()*2 -1, self.rand.random()*2 -1).normalized() * dist
 			
-			planetImage = resources.loadImage("planets/"+self.rand.choice(planetImages), center=True)
-			newPlanet = physicalobject.Planet(x=self.star.x, y=self.star.y, img=planetImage, batch=self.batch)
-			newPlanet.x = self.star.x + newX
-			newPlanet.y = self.star.y + newY
+			kind = self.rand.choice(planetImages)
+			planetImage = resources.loadImage("planets/"+kind, center=True)
+			newPlanet = physicalobject.Planet(x=self.star.x + newX, y=self.star.y + newY, img=planetImage, batch=self.batch)
+			newPlanet.populate(rand=self.rand, kind=kind)
 			newPlanet.scale *= self.rand.choice([0.3, 0.6, 1.0])
 			self.planets.append(newPlanet)
 		self.radius = dist
