@@ -1,7 +1,7 @@
 import pyglet
 from pyglet.window import key
 import resources, hud
-import math
+import math, time
 import mathlib
 
 from mathlib import Vector
@@ -14,7 +14,8 @@ class PhysicalObject(pyglet.sprite.Sprite):
 		self.maxSpeed = 600
 		self.vel = Vector(0.0, 0.0)
 		self.window = pyglet.window.get_platform().get_default_display().get_windows()[0]
-		self.gravity = 0		
+		self.gravity = 0
+		
 		
 	def update(self, dt):					#updates position, accounting for time elapsed (dt)
 		for planet in self.window.currentSystem.planets:
@@ -35,7 +36,30 @@ class PhysicalObject(pyglet.sprite.Sprite):
 		if self.y < minY:
 			self.y = maxY
 		elif self.y > maxY:
-			self.y = minY		
+			self.y = minY	
+			
+	def pathToDest(self, dt):		#paths to the selected destination
+			destination = self.window.hud.selected
+			path = Vector(destination.x - self.x, destination.y - self.y)					#line from player to destination
+			self.rotateToPath(path, dt)
+			if mathlib.approxCoTerminal(self.pathAngle, self.rotation, 10):
+				#Are we close enough to start driving?
+				if path.length() >= 200:	#if we're further than twice the object away
+					self.increaseThrust(dt, 0.25)
+				elif path.length() < 25:
+					self.brake(dt)				
+		
+	def rotateToPath(self, path, dt):
+		try:
+			self.pathAngle = -1*(math.degrees(math.atan2(float(path.y), path.x)))		#angle of path relative to pos x axis. evaluates between 0 and +180 if below the x-axis, otherwise between 0 and -180, so we have to mess with this a bit		
+		except ZeroDivisionError:										
+			if path.y >= 0:												# if path is directly above us
+				self.pathAngle = -90
+			elif path.y < 0:											# if path is directly below us
+				self.pathAngle = 90				
+		angdiff = mathlib.angDiff(self.pathAngle, self.rotation)
+		self.rotation += min(self.rotateSpeed * dt, abs(angdiff)) * -mathlib.sign(angdiff)		
+				
 	
 	
 	"""
@@ -73,6 +97,7 @@ class Player(PhysicalObject):
 		self.orbit = False
 		self.pathAngle = 0
 		self.keyHandler = key.KeyStateHandler()
+		self.shootTime = time.time()
 		@self.window.event
 		def on_key_press(symbol, modifiers):
 			self.keyPress(symbol, modifiers)
@@ -132,6 +157,10 @@ class Player(PhysicalObject):
 			self.brake(dt)
 		if self.keyHandler[key.T]:
 			self.pathToDest(dt)
+		if self.keyHandler[key.SPACE]:
+			if time.time() > self.shootTime:
+				self.fire()
+				self.shootTime = time.time() + 0.25
 		self.updateCamera(dt)
 		
 	def updateCamera(self, dt):
@@ -155,27 +184,14 @@ class Player(PhysicalObject):
 		self.vel.x -= (self.vel.x > 0 and 1 or -1) * min(self.thrust * 0.75 * dt, abs(self.vel.x))
 		self.vel.y -= (self.vel.y > 0 and 1 or -1) * min(self.thrust * 0.75 * dt, abs(self.vel.y))		
 			
-	def pathToDest(self, dt):		#paths to the selected destination
-			destination = self.window.hud.selected
-			path = Vector(destination.x - self.x, destination.y - self.y)					#line from player to destination
-			self.rotateToPath(path, dt)
-			if mathlib.approxCoTerminal(self.pathAngle, self.rotation, 10):
-				#Are we close enough to start driving?
-				if path.length() >= 200:	#if we're further than twice the object away
-					self.increaseThrust(dt, 0.25)
-				elif path.length() < 25:
-					self.brake(dt)				
+	def fire(self):
+		bulletImg = resources.loadImage("bullet.png", center=True)
+		bullet = Bullet(x=self.x, y=self.y, img=bulletImg, batch=self.window.mainBatch)
+		angleRadians = -math.radians(self.rotation)
+		bullet.vel.x = (self.vel.x + math.cos(angleRadians) * bullet.maxSpeed)
+		bullet.vel.y = (self.vel.y + math.sin(angleRadians) * bullet.maxSpeed)	
+		self.window.gameObjs.append(bullet)
 		
-	def rotateToPath(self, path, dt):
-		try:
-			self.pathAngle = -1*(math.degrees(math.atan2(float(path.y), path.x)))		#angle of path relative to pos x axis. evaluates between 0 and +180 if below the x-axis, otherwise between 0 and -180, so we have to mess with this a bit		
-		except ZeroDivisionError:										
-			if path.y >= 0:												# if path is directly above us
-				self.pathAngle = -90
-			elif path.y < 0:											# if path is directly below us
-				self.pathAngle = 90				
-		angdiff = mathlib.angDiff(self.pathAngle, self.rotation)
-		self.rotation += min(self.rotateSpeed * dt, abs(angdiff)) * -mathlib.sign(angdiff)
 
 class Planet(PhysicalObject):
 	def __init__(self, *args, **kwargs): 
@@ -188,3 +204,16 @@ class Planet(PhysicalObject):
 		
 class Sun(Planet):
 	isSun = True
+
+class Bullet(PhysicalObject):
+	def __init__(self, *args, **kwargs):
+		super(Bullet, self).__init__(*args, **kwargs)
+		self.thrust = False	
+		pyglet.clock.schedule_once(self.die, 0.5)		
+		
+	def update(self, dt):					#updates position, accounting for time elapsed (dt)		
+		self.x += self.vel.x * dt
+		self.y += self.vel.y * dt
+	
+	def die(self, dt):
+		self.window.gameObjs.remove(self)

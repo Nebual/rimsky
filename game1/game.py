@@ -11,6 +11,8 @@ class GameWindow(pyglet.window.Window):
 	def __init__(self, *args, **kwargs):
 		super(GameWindow, self).__init__(*args, **kwargs)
 		
+		self.gameObjs = []
+		
 		self.mainBatch = pyglet.graphics.Batch() #"Misc" drawables
 		self.hudBatch = pyglet.graphics.Batch() #Drawn after everything
 
@@ -33,14 +35,17 @@ class GameWindow(pyglet.window.Window):
 		if not self.paused:
 			self.playerShip.update(dt)
 			self.background.update(dt)
-		self.hud.update(dt)
-		
+			for obj in self.gameObjs:
+					obj.update(dt)
+				
+		self.hud.update(dt)		
+		#print self.mainBatch
 	def on_draw(self):
 		pyglet.gl.glClear(pyglet.gl.GL_COLOR_BUFFER_BIT)
 		
 		pyglet.gl.glLoadIdentity() #Set camera to middle
 		pyglet.gl.glTranslatef(-self.camera[0], -self.camera[1], 0.5) #Set camera position
-
+		
 		self.background.draw()
 		self.currentSystem.batch.draw()
 		self.mainBatch.draw()
@@ -64,6 +69,7 @@ class GameWindow(pyglet.window.Window):
 			return True
 		else:
 			return super(GameWindow, self).dispatch_event(event_type, *args)
+			
 
 argparser = OptionParser()
 argparser.add_option("-f", "--fullscreen", action="store_true", dest="fullscreen", default=False, help="Load game at max resolution, in a nobordered window")
