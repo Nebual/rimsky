@@ -22,21 +22,7 @@ class PhysicalObject(pyglet.sprite.Sprite):
 			self.gravitate(dt, planet)
 		self.x += self.vel.x * dt
 		self.y += self.vel.y * dt
-		#self.checkBounds()
 		
-	def checkBounds(self):					#makes screen wrap. replace eventually.
-		minX = -self.image.width/2
-		minY = -self.image.height/2
-		maxX = self.window.width + self.image.width/2
-		maxY = self.window.height + self.image.width/2
-		if self.x < minX:
-			self.x = maxX
-		elif self.x > maxX:
-			self.x = minX
-		if self.y < minY:
-			self.y = maxY
-		elif self.y > maxY:
-			self.y = minY	
 			
 	def pathToDest(self, dt):		#paths to the selected destination
 			destination = self.window.hud.selected
@@ -115,6 +101,10 @@ class Player(PhysicalObject):
 			planet = self.window.currentSystem.nearestPlanet(vec)
 			if vec.distance((planet.x, planet.y)) < planet.radius:
 				self.window.hud.select(planet)
+		elif button == pyglet.window.mouse.RIGHT:
+			if time.time() > self.shootTime:
+				self.turretFire(vec)
+				self.shootTime = time.time() + 0.25
 	
 	def keyPress(self, symbol, modifiers):
 		"""This function is run once per key press"""
@@ -180,6 +170,7 @@ class Player(PhysicalObject):
 		s = self.vel.length()
 		if s > self.maxSpeed:
 			self.vel *= self.maxSpeed / s
+			
 	def brake(self, dt):
 		self.vel.x -= (self.vel.x > 0 and 1 or -1) * min(self.thrust * 0.75 * dt, abs(self.vel.x))
 		self.vel.y -= (self.vel.y > 0 and 1 or -1) * min(self.thrust * 0.75 * dt, abs(self.vel.y))		
@@ -192,6 +183,13 @@ class Player(PhysicalObject):
 		bullet.vel.y = (self.vel.y + math.sin(angleRadians) * bullet.maxSpeed)	
 		self.window.gameObjs.append(bullet)
 		
+	def turretFire(self, tar):
+		bulletImg = resources.loadImage("bullet.png", center=True)
+		bullet = Bullet(x=self.x, y=self.y, img=bulletImg, batch=self.window.mainBatch)
+		#bullet.vel = (Vector(tar.x - self.x, tar.y - self.y) + self.vel/2.0) * bullet.turretSpeed
+		bullet.vel.x = ((self.vel.x/2) + tar.x - self.x) * bullet.turretSpeed
+		bullet.vel.y = ((self.vel.y/2) + tar.y - self.y) * bullet.turretSpeed
+		self.window.gameObjs.append(bullet)		
 
 class Planet(PhysicalObject):
 	def __init__(self, *args, **kwargs): 
@@ -208,7 +206,9 @@ class Sun(Planet):
 class Bullet(PhysicalObject):
 	def __init__(self, *args, **kwargs):
 		super(Bullet, self).__init__(*args, **kwargs)
-		self.thrust = False	
+		self.thrust = False
+		self.maxSpeed = 600
+		self.turretSpeed = 5
 		pyglet.clock.schedule_once(self.die, 0.5)		
 		
 	def update(self, dt):					#updates position, accounting for time elapsed (dt)		
