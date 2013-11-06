@@ -11,13 +11,12 @@ class GameWindow(pyglet.window.Window):
 	def __init__(self, *args, **kwargs):
 		super(GameWindow, self).__init__(*args, **kwargs)
 		
-		self.gameObjs = []
-		
 		self.mainBatch = pyglet.graphics.Batch() #"Misc" drawables
 		self.hudBatch = pyglet.graphics.Batch() #Drawn after everything
 
 		self.background = Background()
-		self.playerShip = physicalobject.Player(x=400, y=200)
+		self.playerShip = physicalobject.Player(x=400, y=200)		
+		
 		self.push_handlers(self.playerShip.keyHandler)
 
 		self.paused = False
@@ -35,8 +34,7 @@ class GameWindow(pyglet.window.Window):
 		if not self.paused:
 			self.playerShip.update(dt)
 			self.background.update(dt)
-			for obj in self.gameObjs:
-					obj.update(dt)
+			self.currentSystem.update(dt)
 				
 		self.hud.update(dt)		
 		#print self.mainBatch

@@ -68,6 +68,9 @@ class PhysicalObject(pyglet.sprite.Sprite):
 				#	speedChange = -((1000000 * planet.gravity) / 200**2) * dt
 					if self.thrust: speedChange = min(self.thrust * 0.75 * dt, speedChange)
 					self.vel += Vector(planet.x - self.x, planet.y - self.y).normalized() * speedChange
+					
+	def collide(self):
+		pass
 						
 		
 class Player(PhysicalObject):
@@ -178,15 +181,17 @@ class Player(PhysicalObject):
 		angleRadians = -math.radians(self.rotation)
 		bullet.vel.x = (self.vel.x + math.cos(angleRadians) * bullet.maxSpeed)
 		bullet.vel.y = (self.vel.y + math.sin(angleRadians) * bullet.maxSpeed)	
-		self.window.gameObjs.append(bullet)
+		self.window.currentSystem.tempObjs.append(bullet)
 		
 	def turretFire(self, tar):
+		#tar = tar.normalized()
+		#tar.x *= 10
+		#tar.y *= 10
 		bulletImg = resources.loadImage("bullet.png", center=True)
 		bullet = Bullet(x=self.x, y=self.y, img=bulletImg, batch=self.window.mainBatch)
-		#bullet.vel = (Vector(tar.x - self.x, tar.y - self.y) + self.vel/2.0) * bullet.turretSpeed
 		bullet.vel.x = ((self.vel.x/2) + tar.x - self.x) * bullet.turretSpeed
 		bullet.vel.y = ((self.vel.y/2) + tar.y - self.y) * bullet.turretSpeed
-		self.window.gameObjs.append(bullet)		
+		self.window.currentSystem.tempObjs.append(bullet)		
 
 class Planet(PhysicalObject):
 	name = "undefined"
@@ -235,6 +240,43 @@ class Bullet(PhysicalObject):
 	def update(self, dt):					#updates position, accounting for time elapsed (dt)		
 		self.x += self.vel.x * dt
 		self.y += self.vel.y * dt
+		self.checkCollision()
 	
+	def die(self, dt=0):
+		self.window.currentSystem.tempObjs.remove(self)
+		pyglet.clock.unschedule(self.die)
+		
+	def checkCollision(self):
+		for obj in self.window.currentSystem.ships:
+			if Vector(self.x, self.y).distance(Vector(obj.x, obj.y)) < obj.width:
+				self.collide(obj)		
+	
+	def collide(self, obj):
+		if hasattr(obj, "hp"):
+			obj.hp -= 10
+			self.die()
+			
+				
+				
+class Ship(PhysicalObject):
+	def __init__(self, *args, **kwargs):
+		super(Ship, self).__init__(*args, **kwargs)
+		self.hp = 30
+		self.dead = False
+		
+	def update(self, dt):
+		if self.hp <= 0:
+			if not self.dead:
+				self.dead = True
+				self.oldWidth = self.width
+				self.image = resources.loadImage("explosion.png", center=True)
+				pyglet.clock.schedule_once(self.die, 0.5)
+				self.scale = 0.01
+			if self.dead:
+				if self.scale < self.oldWidth/250.0:
+					self.scale += 2 * self.oldWidth/250.0 * dt
+					self.opacity -= 400 * dt
+			
+			
 	def die(self, dt):
-		self.window.gameObjs.remove(self)
+		self.window.currentSystem.ships.remove(self)

@@ -9,12 +9,17 @@ class SolarSystem(object):
 	
 	def __init__(self, x=0, y=0, seed=0):
 		self.batch = pyglet.graphics.Batch()
+		self.group1 = pyglet.graphics.OrderedGroup(1)
+		self.group2 = pyglet.graphics.OrderedGroup(2)
 		self.planets = []
 		starImage = resources.loadImage("sun.png", center=True) 
-		self.star = physicalobject.Sun(x=x, y=y, img=starImage, batch=self.batch)
+		self.star = physicalobject.Sun(x=x, y=y, img=starImage, batch=self.batch, group=self.group1)
 		self.planets.append(self.star)
 		self.rand = random.Random()
-		self.rand.seed(73789 + seed*14032)
+		self.rand.seed(73789 + seed*14032)				
+		self.ships = []
+		self.tempObjs = []
+		self.populateShips()
 
 		dist = 100
 		for i in range(self.rand.randint(1, 10)):
@@ -45,3 +50,17 @@ class SolarSystem(object):
 				nearestDist = dist
 				nearest = planet
 		return nearest
+		
+	def update(self, dt):
+		for obj in self.tempObjs:
+			obj.update(dt)
+		for obj in self.ships:
+			obj.update(dt)
+	
+	def populateShips(self):
+		dummyImg = resources.loadImage("playership.png", center=True)					#test stuff
+		pos = 1000		
+		for i in xrange(3):
+			ship = physicalobject.Ship(x=pos, y=0, img=dummyImg, batch=self.batch, group=self.group2)
+			pos += 100
+			self.ships.append(ship)
