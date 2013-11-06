@@ -7,10 +7,14 @@ def centerImage(image):
 	image.anchor_x = image.width/2
 	image.anchor_y = image.height/2
 
-def loadImage(filename, center=False):
-	image = pyglet.resource.image(filename)
-	if center == True:
-		centerImage(image)
-	return image
-	
+imageCache = dict()
 
+def loadImage(filename, center=False):
+	if filename in imageCache:
+		image = imageCache[filename]
+	else:
+		image = pyglet.resource.image(filename)
+		imageCache[filename] = image
+		if center == True:
+			centerImage(image)
+	return image
