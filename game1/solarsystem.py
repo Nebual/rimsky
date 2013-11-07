@@ -61,6 +61,6 @@ class SolarSystem(object):
 		dummyImg = resources.loadImage("playership.png", center=True)					#test stuff
 		pos = 1000		
 		for i in xrange(3):
-			ship = physicalobject.Ship(x=pos, y=0, img=dummyImg, batch=self.batch, group=self.group2)
+			ship = physicalobject.AIShip(x=pos, y=0, img=dummyImg, batch=self.batch, group=self.group2)
 			pos += 100
 			self.ships.append(ship)

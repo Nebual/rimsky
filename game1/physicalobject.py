@@ -15,6 +15,8 @@ class PhysicalObject(pyglet.sprite.Sprite):
 		self.vel = Vector(0.0, 0.0)
 		self.window = pyglet.window.get_platform().get_default_display().get_windows()[0]
 		self.gravity = 0
+		self.rotateSpeed = 200.0
+		self.pathAngle = 0		
 		
 		
 	def update(self, dt):					#updates position, accounting for time elapsed (dt)
@@ -43,20 +45,9 @@ class PhysicalObject(pyglet.sprite.Sprite):
 				self.pathAngle = -90
 			elif path.y < 0:											# if path is directly below us
 				self.pathAngle = 90				
-		angdiff = mathlib.angDiff(self.pathAngle, self.rotation)
+		angdiff = mathlib.angDiff(self.pathAngle, self.rotation)		
 		self.rotation += min(self.rotateSpeed * dt, abs(angdiff)) * -mathlib.sign(angdiff)		
 				
-	
-	
-	"""
-	Assume planet.pos = (500,500)
-	Assume player.pos = (510,700)
-	
-	self = playerShip
-	self.vel += Vector(-10, -200).normalized()
-	self.vel += Vector(-0.01, -0.99) * planet.gravity / (212**2)
-	"""
-	
 	def gravitate(self, dt, planet):
 		if planet.gravity != 0:
 			distance = Vector(planet.x,planet.y).distance((self.x,self.y))
@@ -71,20 +62,82 @@ class PhysicalObject(pyglet.sprite.Sprite):
 					
 	def collide(self):
 		pass
-						
 		
-class Player(PhysicalObject):
+class Ship(PhysicalObject):											
+	def __init__(self, *args, **kwargs):
+		super(Ship, self).__init__(*args, **kwargs)
+		self.hp = 30
+		self.dead = False
+		
+	def update(self, dt):
+		super(Ship, self).update(dt)	
+		if self.hp <= 0:
+			if not self.dead:
+				self.dead = True
+				self.oldWidth = self.width
+				self.image = resources.loadImage("explosion.png", center=True)
+				pyglet.clock.schedule_once(self.die, 0.5)
+				self.scale = 0.01
+			if self.dead:
+				if self.scale < self.oldWidth/250.0:
+					self.scale += 2 * self.oldWidth/250.0 * dt
+					self.opacity -= 400 * dt
+			
+	def die(self, dt):
+		self.window.currentSystem.ships.remove(self)
+		
+	def increaseThrust(self, dt, mul):				#increase speed up to max speed
+		angleRadians = -math.radians(self.rotation)
+		self.vel += Vector(math.cos(angleRadians), math.sin(angleRadians)) * (self.thrust * dt * mul)
+		s = self.vel.length()
+		if s > self.maxSpeed:
+			self.vel *= self.maxSpeed / s
+			
+	def brake(self, dt):
+		self.vel.x -= (self.vel.x > 0 and 1 or -1) * min(self.thrust * 0.75 * dt, abs(self.vel.x))
+		self.vel.y -= (self.vel.y > 0 and 1 or -1) * min(self.thrust * 0.75 * dt, abs(self.vel.y))		
+			
+	def fire(self):
+		bulletImg = resources.loadImage("bullet.png", center=True)
+		bullet = Bullet(x=self.x, y=self.y, img=bulletImg, batch=self.window.mainBatch)
+		angleRadians = -math.radians(self.rotation)
+		bullet.vel.x = (self.vel.x + math.cos(angleRadians) * bullet.maxSpeed)
+		bullet.vel.y = (self.vel.y + math.sin(angleRadians) * bullet.maxSpeed)	
+		self.window.currentSystem.tempObjs.append(bullet)
+		
+	def turretFire(self, tar):
+		#tar = tar.normalized()
+		#tar.x *= 10
+		#tar.y *= 10
+		bulletImg = resources.loadImage("bullet.png", center=True)
+		bullet = Bullet(x=self.x, y=self.y, img=bulletImg, batch=self.window.mainBatch)
+		bullet.vel.x = ((self.vel.x/2) + tar.x - self.x) * bullet.turretSpeed
+		bullet.vel.y = ((self.vel.y/2) + tar.y - self.y) * bullet.turretSpeed
+		self.window.currentSystem.tempObjs.append(bullet)			
+		
+			
+class AIShip(Ship):
+	def __init__(self, *args, **kwargs):
+		super(AIShip, self).__init__(*args, **kwargs)
+			
+	def update(self, dt):
+		super(AIShip, self).update(dt)
+		self.attackEnemy(dt, self.window.playerShip)
+		
+	def attackEnemy(self, dt, enemy):
+		enemyPath = Vector(enemy.x -self.x, enemy.y - self.y)
+		enemyDist = Vector(enemy.x, enemy.y).distance(Vector(self.x, self.y))
+		if enemyDist < self.width*4:
+			self.rotateToPath(enemyPath, dt)								
+		
+class Player(Ship):
 	
 	def __init__(self, *args, **kwargs):
 		playerImage = resources.loadImage("playership.png", center=True)	#player texture
 		super(Player, self).__init__(img=playerImage, *args, **kwargs)
 		self.thrust = 300.0
-		self.rotateSpeed = 200.0
 		self.rotation = 135
 		self.starmode = 0
-		self.oriented = False							#for pathing
-		self.orbit = False
-		self.pathAngle = 0
 		self.keyHandler = key.KeyStateHandler()
 		self.shootTime = time.time()
 		@self.window.event
@@ -163,35 +216,7 @@ class Player(PhysicalObject):
 			self.window.camera.y += ((self.y - self.window.camera.y) - (self.window.height / 1.5)) * 3 * dt
 		elif (self.y - self.window.camera.y) < (self.window.height / 3):
 			self.window.camera.y += ((self.y - self.window.camera.y) - (self.window.height / 3)) * 3 * dt
-			
-	def increaseThrust(self, dt, mul):				#increase speed up to max speed
-		angleRadians = -math.radians(self.rotation)
-		self.vel += Vector(math.cos(angleRadians), math.sin(angleRadians)) * (self.thrust * dt * mul)
-		s = self.vel.length()
-		if s > self.maxSpeed:
-			self.vel *= self.maxSpeed / s
-			
-	def brake(self, dt):
-		self.vel.x -= (self.vel.x > 0 and 1 or -1) * min(self.thrust * 0.75 * dt, abs(self.vel.x))
-		self.vel.y -= (self.vel.y > 0 and 1 or -1) * min(self.thrust * 0.75 * dt, abs(self.vel.y))		
-			
-	def fire(self):
-		bulletImg = resources.loadImage("bullet.png", center=True)
-		bullet = Bullet(x=self.x, y=self.y, img=bulletImg, batch=self.window.mainBatch)
-		angleRadians = -math.radians(self.rotation)
-		bullet.vel.x = (self.vel.x + math.cos(angleRadians) * bullet.maxSpeed)
-		bullet.vel.y = (self.vel.y + math.sin(angleRadians) * bullet.maxSpeed)	
-		self.window.currentSystem.tempObjs.append(bullet)
-		
-	def turretFire(self, tar):
-		#tar = tar.normalized()
-		#tar.x *= 10
-		#tar.y *= 10
-		bulletImg = resources.loadImage("bullet.png", center=True)
-		bullet = Bullet(x=self.x, y=self.y, img=bulletImg, batch=self.window.mainBatch)
-		bullet.vel.x = ((self.vel.x/2) + tar.x - self.x) * bullet.turretSpeed
-		bullet.vel.y = ((self.vel.y/2) + tar.y - self.y) * bullet.turretSpeed
-		self.window.currentSystem.tempObjs.append(bullet)		
+				
 
 class Planet(PhysicalObject):
 	name = "undefined"
@@ -257,26 +282,3 @@ class Bullet(PhysicalObject):
 			self.die()
 			
 				
-				
-class Ship(PhysicalObject):
-	def __init__(self, *args, **kwargs):
-		super(Ship, self).__init__(*args, **kwargs)
-		self.hp = 30
-		self.dead = False
-		
-	def update(self, dt):
-		if self.hp <= 0:
-			if not self.dead:
-				self.dead = True
-				self.oldWidth = self.width
-				self.image = resources.loadImage("explosion.png", center=True)
-				pyglet.clock.schedule_once(self.die, 0.5)
-				self.scale = 0.01
-			if self.dead:
-				if self.scale < self.oldWidth/250.0:
-					self.scale += 2 * self.oldWidth/250.0 * dt
-					self.opacity -= 400 * dt
-			
-			
-	def die(self, dt):
-		self.window.currentSystem.ships.remove(self)

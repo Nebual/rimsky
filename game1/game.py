@@ -15,13 +15,13 @@ class GameWindow(pyglet.window.Window):
 		self.hudBatch = pyglet.graphics.Batch() #Drawn after everything
 
 		self.background = Background()
-		self.playerShip = physicalobject.Player(x=400, y=200)		
+		self.playerShip = physicalobject.Player(x=0, y=0)		
 		
 		self.push_handlers(self.playerShip.keyHandler)
 
 		self.paused = False
 		self.camera = Vector(0,0)
-		self.currentSystem = solarsystem.SolarSystem(x=400, y=300)
+		self.currentSystem = solarsystem.SolarSystem(x=0, y=0)
 
 		#Basically targetting either 1920x1080 (and 1920x1200) at 1, or 1366x768 ish at 0.5
 		self.uiScale = 1
