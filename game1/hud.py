@@ -134,7 +134,7 @@ class PlanetFrame(Frame):
 			ply = self.window.playerShip
 			if kind not in ply.cargo: return
 			
-			purchased = min(10, ply.cargo[kind].quantity)
+			purchased = min((ply.cargo[kind].quantity % 10) or 10, ply.cargo[kind].quantity)
 			
 			ply.cargo[kind].quantity -= purchased
 			ply.credits += self.planet.goods[kind] * purchased
