@@ -75,7 +75,10 @@ class Ship(PhysicalObject):
 		self.secondaryGuns = []
 		for gun in xrange(1):
 			gun = components.Gun(self, gunType="turret")
-			self.secondaryGuns.append(gun)	
+			self.secondaryGuns.append(gun)
+		self.cargo = {}
+		self.cargoMax = 50
+		self.credits = 0
 		
 	def update(self, dt):
 		super(Ship, self).update(dt)	
@@ -120,6 +123,7 @@ class Ship(PhysicalObject):
 class AIShip(Ship):
 	def __init__(self, *args, **kwargs):
 		super(AIShip, self).__init__(*args, **kwargs)
+		self.thrust = 300.0
 			
 	def update(self, dt):
 		super(AIShip, self).update(dt)
@@ -136,10 +140,13 @@ class Player(Ship):
 	def __init__(self, *args, **kwargs):
 		playerImage = resources.loadImage("playership.png", center=True)	#player texture
 		super(Player, self).__init__(img=playerImage, *args, **kwargs)
+		self.hp = 1000 #We don't want player to die right now
 		self.thrust = 300.0
 		self.rotation = 135
 		self.starmode = 0
 		self.keyHandler = key.KeyStateHandler()
+		self.credits = 10000
+		
 		@self.window.event
 		def on_key_press(symbol, modifiers):
 			self.keyPress(symbol, modifiers)
@@ -226,6 +233,7 @@ class Planet(PhysicalObject):
 		super(Planet, self).__init__(*args, **kwargs)
 		self.gravity = self.width*self.height*300			#Gravity scales with size of image
 		self.radius = (self.width + self.height) / 4
+		self.goods = {}
 
 	def populate(self, rand, kind):
 		if "rock" in kind:
@@ -246,6 +254,11 @@ class Planet(PhysicalObject):
 		else:
 			#Gas
 			self.name = "GAS_%.4d" % rand.randrange(1,9999)
+		if self.hasTrade:
+			if rand.random() < 0.90: self.goods["food"] = 		80	+ int(rand.random()*4)*20	#80-160
+			if rand.random() < 0.75: self.goods["steel"] = 		200	+ int(rand.random()*4)*50	#200-400
+			if rand.random() < 0.75: self.goods["lithium"] = 	600	+ int(rand.random()*4)*100 	#600-1000
+			if rand.random() < 0.75: self.goods["medicine"] = 	300	+ int(rand.random()*4)*75	#300-600
 		
 class Sun(Planet):
 	isSun = True
@@ -276,5 +289,3 @@ class Bullet(PhysicalObject):
 		if hasattr(obj, "hp"):
 			obj.hp -= 10
 			self.die()
-			
-				
