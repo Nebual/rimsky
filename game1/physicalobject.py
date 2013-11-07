@@ -1,7 +1,7 @@
 import pyglet
 from pyglet.window import key
-import resources, hud
-import math, time
+import resources, hud, components
+import math
 import mathlib
 
 from mathlib import Vector
@@ -68,23 +68,39 @@ class Ship(PhysicalObject):
 		super(Ship, self).__init__(*args, **kwargs)
 		self.hp = 30
 		self.dead = False
+		self.mainGuns = []
+		for gun in xrange(1):
+			gun = components.Gun(self)
+			self.mainGuns.append(gun)
+		self.secondaryGuns = []
+		for gun in xrange(1):
+			gun = components.Gun(self, gunType="turret")
+			self.secondaryGuns.append(gun)	
 		
 	def update(self, dt):
 		super(Ship, self).update(dt)	
 		if self.hp <= 0:
-			if not self.dead:
-				self.dead = True
-				self.oldWidth = self.width
-				self.image = resources.loadImage("explosion.png", center=True)
-				pyglet.clock.schedule_once(self.die, 0.5)
-				self.scale = 0.01
-			if self.dead:
-				if self.scale < self.oldWidth/250.0:
-					self.scale += 2 * self.oldWidth/250.0 * dt
-					self.opacity -= 400 * dt
-			
+			self.explode(dt)
+	
+	def explode(self, dt):
+		if not self.dead:
+			self.dead = True
+			self.oldWidth = self.width
+			pyglet.clock.schedule_once(self.die, 0.5)			
+			self.image = resources.loadImage("explosion.png", center=True)
+			self.scale = 0.1
+		if self.dead:
+			if self.scale < self.oldWidth/250.0:
+				self.scale += 2 * self.oldWidth/250.0 * dt
+				self.opacity -= 300 * dt
+			else:
+				self.opacity -= 510 * dt			
+
 	def die(self, dt):
+		self.mainGuns[:] = []						#deleting guns
+		self.secondaryGuns[:] = []
 		self.window.currentSystem.ships.remove(self)
+		
 		
 	def increaseThrust(self, dt, mul):				#increase speed up to max speed
 		angleRadians = -math.radians(self.rotation)
@@ -95,26 +111,11 @@ class Ship(PhysicalObject):
 			
 	def brake(self, dt):
 		self.vel.x -= (self.vel.x > 0 and 1 or -1) * min(self.thrust * 0.75 * dt, abs(self.vel.x))
-		self.vel.y -= (self.vel.y > 0 and 1 or -1) * min(self.thrust * 0.75 * dt, abs(self.vel.y))		
-			
-	def fire(self):
-		bulletImg = resources.loadImage("bullet.png", center=True)
-		bullet = Bullet(x=self.x, y=self.y, img=bulletImg, batch=self.window.mainBatch)
-		angleRadians = -math.radians(self.rotation)
-		bullet.vel.x = (self.vel.x + math.cos(angleRadians) * bullet.maxSpeed)
-		bullet.vel.y = (self.vel.y + math.sin(angleRadians) * bullet.maxSpeed)	
-		self.window.currentSystem.tempObjs.append(bullet)
-		
-	def turretFire(self, tar):
-		#tar = tar.normalized()
-		#tar.x *= 10
-		#tar.y *= 10
-		bulletImg = resources.loadImage("bullet.png", center=True)
-		bullet = Bullet(x=self.x, y=self.y, img=bulletImg, batch=self.window.mainBatch)
-		bullet.vel.x = ((self.vel.x/2) + tar.x - self.x) * bullet.turretSpeed
-		bullet.vel.y = ((self.vel.y/2) + tar.y - self.y) * bullet.turretSpeed
-		self.window.currentSystem.tempObjs.append(bullet)			
-		
+		self.vel.y -= (self.vel.y > 0 and 1 or -1) * min(self.thrust * 0.75 * dt, abs(self.vel.y))				
+	
+	def fire(self, gunList, vec=Vector(0,0)):
+		for gun in gunList:
+			gun.fire(vec)
 			
 class AIShip(Ship):
 	def __init__(self, *args, **kwargs):
@@ -139,7 +140,6 @@ class Player(Ship):
 		self.rotation = 135
 		self.starmode = 0
 		self.keyHandler = key.KeyStateHandler()
-		self.shootTime = time.time()
 		@self.window.event
 		def on_key_press(symbol, modifiers):
 			self.keyPress(symbol, modifiers)
@@ -158,9 +158,7 @@ class Player(Ship):
 			if vec.distance((planet.x, planet.y)) < planet.radius:
 				self.window.hud.select(planet)
 		elif button == pyglet.window.mouse.RIGHT:
-			if time.time() > self.shootTime:
-				self.turretFire(vec)
-				self.shootTime = time.time() + 0.25
+				self.fire(self.secondaryGuns, vec)
 	
 	def keyPress(self, symbol, modifiers):
 		"""This function is run once per key press"""
@@ -201,9 +199,7 @@ class Player(Ship):
 		if self.keyHandler[key.T]:
 			self.pathToDest(dt)
 		if self.keyHandler[key.SPACE]:
-			if time.time() > self.shootTime:
-				self.fire()
-				self.shootTime = time.time() + 0.25
+			self.fire(self.mainGuns)
 		self.updateCamera(dt)
 		
 	def updateCamera(self, dt):
