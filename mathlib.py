@@ -25,19 +25,19 @@ class Vector:
 		return self
 	
 	def __div__(self, val):
-		if hasattr(val, "__iter__"):
+		if hasattr(val, "__getitem__"):
 			return Vector(self.x / val[0], self.y / val[1])
 		else:
 			return Vector(self.x / val, self.y / val)
 	
 	def __mul__(self, val):
-		if hasattr(val, "__iter__"):
+		if hasattr(val, "__getitem__"):
 			return Vector(self.x * val[0], self.y * val[1])
 		else:
 			return Vector(self.x * val, self.y * val)
 	
 	def __idiv__(self, val):
-		if hasattr(val, "__iter__"):
+		if hasattr(val, "__getitem__"):
 			self.x /= val[0]
 			self.y /= val[1]
 			return self
@@ -47,7 +47,7 @@ class Vector:
 			return self
 		
 	def __imul__(self, val):
-		if hasattr(val, "__iter__"):
+		if hasattr(val, "__getitem__"):
 			self.x *= val[0]
 			self.y *= val[1]
 			return self
