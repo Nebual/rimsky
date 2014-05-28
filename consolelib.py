@@ -1,5 +1,5 @@
 __all__ = ["colorama", "colourize", "winchr", "clear", "UP", "DOWN", "RIGHT", "LEFT", "getKey"]
-import sys, os, contextlib
+import sys, os, contextlib, time
 from cStringIO import StringIO
 try: 
 	import colorama; colorama.init() #Allows console colours on Windows
@@ -31,7 +31,7 @@ def clear():
 	os.system(os.name == "nt" and "cls" or "clear")
 
 try:
-	import msvcrt, time
+	import msvcrt
 	#Okay the import succeeded, we're Windows
 	def getch():
 		ch = msvcrt.getch()
@@ -118,6 +118,8 @@ class mystdout(object):
 		sys.stdout = self.stdout
 		self.file.close()
 		return s
+	def flush(self):
+		if not self.suppress: self.stdout.flush()
 
 @contextlib.contextmanager
 def listenPrints(suppress=False):
@@ -132,7 +134,7 @@ def listenPrints(suppress=False):
 	finally:
 		out[0] = myout.close()
 @contextlib.contextmanager
-def charByChar(speed=0.05):
+def charByChar(speed=0.0066):
 	"""Creates a context that saves all prints to a string, suppressing them.
 	When context is left, it prints the string char by char.
 	with charByChar(speed=0.1): print("lol")
@@ -143,6 +145,18 @@ def charByChar(speed=0.05):
 		sys.stdout.write(char)
 		sys.stdout.flush()
 		time.sleep(speed)
+@contextlib.contextmanager
+def charByLine(speed=0.0066):
+	"""Creates a context that saves all prints to a string, suppressing them.
+	When context is left, it prints the string char by char, with a longer delay at line endings.
+	"""
+	with listenPrints(suppress=True) as out:
+		yield out
+	for i, char in enumerate(out[0]):
+		sys.stdout.write(char)
+		sys.stdout.flush()
+		time.sleep(speed)
+		if char == "\n" and out[0][i-1] in ("!",".","?") and i != len(out[0])-1: time.sleep(speed*50)
 
 if __name__ == "__main__":
 	while True:
