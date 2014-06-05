@@ -3,7 +3,9 @@ import sys, os, contextlib, time
 from cStringIO import StringIO
 try: 
 	import colorama; colorama.init() #Allows console colours on Windows
-except ImportError: pass
+except ImportError:
+	def colourize(text, colour="GREEN"): pass
+	def background(text, colour="GREEN"): pass
 else:
 	def colourize(text, colour="GREEN"):
 		return colorama.Fore.__dict__[colour] + text + colorama.Fore.RESET
